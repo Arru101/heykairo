@@ -104,6 +104,22 @@ const markMessagesDelivered = (receiverId) => {
   });
 };
 
+// Delete all messages exchanged between two users (both directions)
+const deleteConversation = (userA, userB) => {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `DELETE FROM messages WHERE
+       (sender_id = ? AND receiver_id = ?) OR
+       (sender_id = ? AND receiver_id = ?)`,
+      [userA, userB, userB, userA],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
+  });
+};
+
 module.exports = {
   updateUserSocket,
   getUserBySocketId,
@@ -111,4 +127,5 @@ module.exports = {
   saveMessage,
   getUndeliveredMessages,
   markMessagesDelivered,
+  deleteConversation,
 };

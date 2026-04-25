@@ -119,11 +119,21 @@ function App() {
       if (senderId === activeChatRef.current) setIsTyping(false);
     });
 
+    // Other party ended the chat — auto-clear this side too
+    socket.on('chat_ended', () => {
+      setMessages([]);
+      setActiveChat(null);
+      setCryptoKey(null);
+      activeChatRef.current = null;
+      cryptoKeyRef.current = null;
+    });
+
     return () => {
       socket.off('connect');
       socket.off('receive_message');
       socket.off('typing');
       socket.off('stop_typing');
+      socket.off('chat_ended');
     };
   }, []);
 
@@ -160,6 +170,21 @@ function App() {
       alert('Failed to establish secure connection. Check your inputs.');
     }
   };
+
+  // End chat: wipe messages from DB on server, clear local state
+  const endChat = useCallback(() => {
+    const chat = activeChatRef.current;
+    if (chat) {
+      socket.emit('end_chat', { senderId: myId, receiverId: chat });
+    }
+    setMessages([]);
+    setActiveChat(null);
+    setCryptoKey(null);
+    activeChatRef.current = null;
+    cryptoKeyRef.current = null;
+    setInputText('');
+    setShowEmoji(false);
+  }, [myId]);
 
   const sendMessage = useCallback(async (text, encryptedMediaUrl = null) => {
     const key = cryptoKeyRef.current;
@@ -368,7 +393,7 @@ function App() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
-              onClick={() => { setActiveChat(null); setCryptoKey(null); setMessages([]); }}
+              onClick={endChat}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#71717a', padding: '6px', borderRadius: '6px', display: 'flex', transition: 'color 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.color = '#fafafa'}
               onMouseLeave={e => e.currentTarget.style.color = '#71717a'}
