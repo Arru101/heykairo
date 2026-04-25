@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-app: #09090b; /* Zinc 950 */
+  --bg-surface: #18181b; /* Zinc 900 */
+  --bg-hover: #27272a; /* Zinc 800 */
+  --border-color: #27272a; 
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  
+  --accent-color: #2563eb; /* Blue 600 */
+  --accent-hover: #1d4ed8;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100dvh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pro-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+}
+
+.pro-input {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease;
+}
+
+.pro-input:focus-within {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.pro-btn-primary {
+  background-color: var(--text-primary);
+  color: var(--bg-app);
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 0.1s ease;
+}
+
+.pro-btn-primary:hover {
+  background-color: #d4d4d8; /* Zinc 300 */
+}
+
+.pro-btn-primary:active {
+  background-color: #a1a1aa; /* Zinc 400 */
+}
+
+.pro-bubble-me {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border-radius: 8px 8px 0px 8px;
+}
+
+.pro-bubble-other {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px 8px 8px 0px;
+}
+
+/* Scrollbar sleek */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+.hide-scroll {
+  scrollbar-width: thin;
+}
