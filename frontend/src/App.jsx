@@ -218,7 +218,7 @@ function App() {
     const chat = activeChatRef.current;
     if (chat) socket.emit('end_chat', { senderId: myId, receiverId: chat });
     setMessages([]); setActiveChat(null); setCryptoKey(null);
-    setInputText(''); setShowEmoji(false); setShowConfirm(false);
+    setInputText(''); setShowEmoji(false); setShowConfirm(false); setPasswordInput('');
   }, [myId]);
 
   const sendMessage = useCallback(async (text, mediaUrl = null) => {
@@ -233,6 +233,7 @@ function App() {
     setMessages(p => [...p, newMsg]);
     socket.emit('send_message', { senderId: myId, receiverId: chat, encryptedPayload: encrypted });
     setInputText('');
+    setShowEmoji(false);
     socket.emit('stop_typing', { senderId: myId, receiverId: chat });
     
     // KEYBOARD STABILITY FIX: DO NOT BLUR, JUST KEEP FOCUS
@@ -352,7 +353,7 @@ function App() {
           })}
         </div>
 
-        {showEmoji && <div className="emoji-container"><EmojiPicker theme="dark" onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={350} width="100%" /></div>}
+        {showEmoji && <div className="emoji-container"><EmojiPicker theme="dark" onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={280} width="100%" /></div>}
 
         <footer className="chat-footer">
           <div className="input-row">

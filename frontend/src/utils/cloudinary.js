@@ -24,7 +24,7 @@ export const uploadEncryptedToCloudinary = async (encryptedBase64) => {
 
     // 2. Prepare Form Data
     const formData = new FormData();
-    formData.append('file', blob, 'encrypted_payload.bin');
+    formData.append('file', blob, 'encrypted_payload.enc');
     formData.append('upload_preset', UPLOAD_PRESET);
     
     // 3. Use 'auto/upload' to let Cloudinary determine the type based on the preset

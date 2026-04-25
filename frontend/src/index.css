@@ -125,6 +125,9 @@ body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter'
 .uppercase-input { text-transform: uppercase; }
 .uppercase-input::placeholder { text-transform: none; }
 
+.emoji-container { border-top: 1px solid var(--border); background: var(--bg-card); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
 @media (max-width: 600px) { 
   .chat-container { border: none; border-radius: 0; } 
   .connect-screen { padding: 16px; }
