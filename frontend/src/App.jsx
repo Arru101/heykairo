@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Send, Image as ImageIcon, Smile, ArrowLeft, Lock,
-  Loader2, KeyRound, User, ShieldCheck, Copy, Check, X, ZoomIn, Info
+  Loader2, KeyRound, User, ShieldCheck, Copy, Check, X, ZoomIn, Info, LogOut
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 
@@ -45,41 +45,42 @@ function KairoLogo({ size = 32 }) {
   );
 }
 
-/* ─── Toast Component ────────────────────────────────────────────────── */
+/* ─── Components ─────────────────────────────────────────────────────── */
+
 function Toast({ message, type, visible }) {
   return (
     <div className={`toast ${type}${visible ? ' show' : ''}`}>
-      {type === 'success' ? <Check size={14} /> : type === 'error' ? <Info size={14} /> : <Check size={14} />}
+      {type === 'success' ? <Check size={14} /> : <Info size={14} />}
       {message}
     </div>
   );
 }
 
-/* ─── Image Preview Modal ────────────────────────────────────────────── */
-function ImageModal({ src, onClose }) {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
+function ConfirmModal({ onConfirm, onCancel }) {
   return (
-    <div className="img-overlay" onClick={onClose}>
-      <img
-        src={src}
-        alt="preview"
-        onClick={e => e.stopPropagation()}
-        className="modal-image"
-        draggable={false}
-      />
-      <button className="modal-close" onClick={onClose}>
-        <X size={20} />
-      </button>
+    <div className="confirm-overlay" onClick={onCancel}>
+      <div className="confirm-card" onClick={e => e.stopPropagation()}>
+        <div className="confirm-icon"><LogOut size={24} /></div>
+        <h3>End Secure Chat?</h3>
+        <p>This will permanently delete all messages on both devices. This action cannot be undone.</p>
+        <div className="confirm-actions">
+          <button className="confirm-no" onClick={onCancel}>Stay in Chat</button>
+          <button className="confirm-yes" onClick={onConfirm}>Yes, End Chat</button>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ─── Encrypted Image Component ───────────────────────────────────────── */
+function ImageModal({ src, onClose }) {
+  return (
+    <div className="img-overlay" onClick={onClose}>
+      <img src={src} alt="preview" onClick={e => e.stopPropagation()} className="modal-image" />
+      <button className="modal-close" onClick={onClose}><X size={20} /></button>
+    </div>
+  );
+}
+
 function EncryptedImage({ cloudinaryUrl, cryptoKey }) {
   const [blobUrl, setBlobUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,45 +90,29 @@ function EncryptedImage({ cloudinaryUrl, cryptoKey }) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true); setFailed(false); setBlobUrl(null);
     (async () => {
       try {
         const encBase64 = await fetchEncryptedBlob(cloudinaryUrl);
-        if (!encBase64 || cancelled) throw new Error('Fetch failed');
+        if (!encBase64 || cancelled) return;
         const result = await decryptFile(encBase64, cryptoKey);
-        if (!result || cancelled) throw new Error('Decrypt failed');
+        if (!result || cancelled) return;
         const url = createEphemeralBlobUrl(result.bytes, result.mimeType);
         objRef.current = url;
         if (!cancelled) { setBlobUrl(url); setLoading(false); }
       } catch (e) {
-        console.error('Image load error:', e);
         if (!cancelled) { setFailed(true); setLoading(false); }
       }
     })();
-    return () => {
-      cancelled = true;
-      if (objRef.current) revokeBlobUrl(objRef.current);
-    };
+    return () => { cancelled = true; if (objRef.current) revokeBlobUrl(objRef.current); };
   }, [cloudinaryUrl, cryptoKey]);
 
-  if (loading) return (
-    <div className="image-loader">
-      <Loader2 size={16} className="spin" />
-      <span>Decrypting Image...</span>
-    </div>
-  );
-  if (failed) return <div className="image-failed">Image could not be decrypted</div>;
+  if (loading) return <div className="image-loader"><Loader2 size={16} className="spin" /><span>Decrypting...</span></div>;
+  if (failed) return <div className="image-failed">Image unavailable</div>;
 
   return (
     <>
       <div className="message-image-container" onClick={() => setPreview(true)}>
-        <img
-          src={blobUrl}
-          alt="secure"
-          className="message-image"
-          draggable={false}
-          onContextMenu={e => e.preventDefault()}
-        />
+        <img src={blobUrl} alt="secure" className="message-image" draggable={false} />
         <div className="image-zoom-overlay"><ZoomIn size={16} /></div>
       </div>
       {preview && <ImageModal src={blobUrl} onClose={() => setPreview(false)} />}
@@ -135,23 +120,23 @@ function EncryptedImage({ cloudinaryUrl, cryptoKey }) {
   );
 }
 
-/* ─── Main Application ────────────────────────────────────────────────── */
+/* ─── Main App ────────────────────────────────────────────────────────── */
+
 function App() {
   const [myId, setMyId] = useState('');
   const [targetIdInput, setTargetIdInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [cryptoKey, setCryptoKey] = useState(null);
-  const [copied, setCopied] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
-
   const [activeChat, setActiveChat] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [copied, setCopied] = useState(false);
 
   const messagesAreaRef = useRef(null);
   const textareaRef = useRef(null);
@@ -162,234 +147,150 @@ function App() {
   useEffect(() => { cryptoKeyRef.current = cryptoKey; }, [cryptoKey]);
   useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
 
-  useEffect(() => { initSecurity(); }, []);
-
   const showToast = useCallback((message, type = 'success') => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
   }, []);
 
-  /* Mobile Layout Fix for Keyboard */
+  /* Mobile Keyboard Stability Fix */
   useEffect(() => {
     const handleViewportChange = () => {
       if (window.visualViewport) {
-        const height = window.visualViewport.height;
-        document.documentElement.style.setProperty('--vh', `${height}px`);
-        if (messagesAreaRef.current) {
-          messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
-        }
+        document.documentElement.style.setProperty('--vh', `${window.visualViewport.height}px`);
+        // Use requestAnimationFrame to ensure the scroll happens after layout
+        requestAnimationFrame(() => {
+          if (messagesAreaRef.current) {
+            messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
+          }
+        });
       }
     };
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange);
-      window.visualViewport.addEventListener('scroll', handleViewportChange);
       handleViewportChange();
     }
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-        window.visualViewport.removeEventListener('scroll', handleViewportChange);
-      }
-    };
+    return () => window.visualViewport?.removeEventListener('resize', handleViewportChange);
   }, [activeChat]);
 
-  /* Socket Handlers */
+  /* Socket & Lifecycle */
   useEffect(() => {
-    let savedId = localStorage.getItem('kairo_id');
-    if (!savedId) { savedId = generateId(); localStorage.setItem('kairo_id', savedId); }
+    let savedId = localStorage.getItem('kairo_id') || generateId();
+    localStorage.setItem('kairo_id', savedId);
     setMyId(savedId);
     socket.connect();
-
     socket.on('connect', () => socket.emit('identify', savedId));
-
     socket.on('receive_message', async (data) => {
       const key = cryptoKeyRef.current;
-      const chat = activeChatRef.current;
-      if (!key || data.sender_id !== chat) return;
+      if (!key || data.sender_id !== activeChatRef.current) return;
       const dec = await decryptMessage(data.encrypted_payload, key);
-      let parsed;
-      try { parsed = JSON.parse(dec); } catch { parsed = { text: dec, mediaUrl: null }; }
-      setMessages(prev => [...prev, {
-        ...data,
-        text: dec,
-        _parsed: parsed,
-        me: false,
-        timestamp: data.timestamp || new Date().toISOString()
-      }]);
+      let parsed; try { parsed = JSON.parse(dec); } catch { parsed = { text: dec, mediaUrl: null }; }
+      setMessages(p => [...p, { ...data, text: dec, _parsed: parsed, me: false, timestamp: data.timestamp || new Date().toISOString() }]);
     });
-
-    socket.on('typing', ({ senderId }) => {
-      if (senderId === activeChatRef.current) setIsTyping(true);
-    });
-    socket.on('stop_typing', ({ senderId }) => {
-      if (senderId === activeChatRef.current) setIsTyping(false);
-    });
-    socket.on('chat_ended', () => {
-      setMessages([]); setActiveChat(null); setCryptoKey(null);
-      activeChatRef.current = null; cryptoKeyRef.current = null;
-    });
-
-    return () => {
-      socket.off('connect'); socket.off('receive_message');
-      socket.off('typing'); socket.off('stop_typing'); socket.off('chat_ended');
-    };
+    socket.on('typing', ({ senderId }) => { if (senderId === activeChatRef.current) setIsTyping(true); });
+    socket.on('stop_typing', ({ senderId }) => { if (senderId === activeChatRef.current) setIsTyping(false); });
+    socket.on('chat_ended', () => { setMessages([]); setActiveChat(null); setCryptoKey(null); });
+    return () => socket.disconnect();
   }, []);
 
-  /* Presence */
   useEffect(() => {
     if (!activeChat) return;
     const poll = () => socket.emit('check_status', activeChat, res => setIsOnline(res?.isOnline ?? false));
-    poll();
-    const iv = setInterval(poll, 5000);
+    poll(); const iv = setInterval(poll, 5000);
     return () => clearInterval(iv);
   }, [activeChat]);
 
-  /* Auto-scroll */
   useEffect(() => {
-    if (messagesAreaRef.current) {
-      messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
-    }
+    if (messagesAreaRef.current) messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
   }, [messages, isTyping]);
 
   const handleConnect = async (e) => {
     e.preventDefault();
-    if (!targetIdInput.trim() || !passwordInput.trim()) return;
     try {
       const key = await deriveKey(passwordInput);
-      setCryptoKey(key); cryptoKeyRef.current = key;
-      const target = targetIdInput.toUpperCase().trim();
-      setActiveChat(target); activeChatRef.current = target;
+      setCryptoKey(key);
+      setActiveChat(targetIdInput.toUpperCase().trim());
       setMessages([]);
-      showToast('Secure channel established!', 'success');
-    } catch {
-      showToast('Encryption key mismatch or error.', 'error');
-    }
+      showToast('Connected Securely!', 'success');
+    } catch { showToast('Connection failed.', 'error'); }
   };
 
   const endChat = useCallback(() => {
     const chat = activeChatRef.current;
     if (chat) socket.emit('end_chat', { senderId: myId, receiverId: chat });
     setMessages([]); setActiveChat(null); setCryptoKey(null);
-    activeChatRef.current = null; cryptoKeyRef.current = null;
-    setInputText(''); setShowEmoji(false);
+    setInputText(''); setShowEmoji(false); setShowConfirm(false);
   }, [myId]);
 
-  const sendMessage = useCallback(async (text, encryptedMediaUrl = null) => {
+  const sendMessage = useCallback(async (text, mediaUrl = null) => {
     const key = cryptoKeyRef.current;
     const chat = activeChatRef.current;
-    if ((!text.trim() && !encryptedMediaUrl) || !key || !chat) return;
+    if ((!text.trim() && !mediaUrl) || !key || !chat) return;
 
-    const payload = JSON.stringify({ text: text.trim(), mediaUrl: encryptedMediaUrl });
+    const payload = JSON.stringify({ text: text.trim(), mediaUrl });
     const encrypted = await encryptMessage(payload, key);
-    let parsed;
-    try { parsed = JSON.parse(payload); } catch { parsed = { text: payload, mediaUrl: null }; }
-
-    const newMsg = {
-      id: Date.now(), sender_id: myId, receiver_id: chat,
-      encrypted_payload: encrypted,
-      text: payload,
-      _parsed: parsed,
-      me: true,
-      timestamp: new Date().toISOString()
-    };
-    setMessages(prev => [...prev, newMsg]);
+    const newMsg = { id: Date.now(), sender_id: myId, text: payload, _parsed: { text: text.trim(), mediaUrl }, me: true, timestamp: new Date().toISOString() };
+    
+    setMessages(p => [...p, newMsg]);
     socket.emit('send_message', { senderId: myId, receiverId: chat, encryptedPayload: encrypted });
-    setInputText(''); setShowEmoji(false);
+    setInputText('');
     socket.emit('stop_typing', { senderId: myId, receiverId: chat });
-    setTimeout(() => textareaRef.current?.focus(), 50);
+    
+    // KEYBOARD STABILITY FIX: DO NOT BLUR, JUST KEEP FOCUS
+    textareaRef.current?.focus();
   }, [myId]);
-
-  const handleInputChange = (e) => {
-    setInputText(e.target.value);
-    const chat = activeChatRef.current;
-    if (!chat) return;
-    socket.emit('typing', { senderId: myId, receiverId: chat });
-    clearTimeout(typingTimeout.current);
-    typingTimeout.current = setTimeout(() =>
-      socket.emit('stop_typing', { senderId: myId, receiverId: chat }), 2000);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); }
-  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { showToast('File too large (max 10MB)', 'error'); return; }
-
-    const key = cryptoKeyRef.current;
-    if (!key) return;
+    if (file.size > 8 * 1024 * 1024) { showToast('File too large (>8MB)', 'error'); return; }
+    
     setUploading(true);
     try {
+      const key = cryptoKeyRef.current;
       const encryptedBase64 = await encryptFile(file, key);
       const url = await uploadEncryptedToCloudinary(encryptedBase64);
-      if (url) {
-        await sendMessage('', url);
-        showToast('Image sent securely!', 'success');
-      }
+      await sendMessage('', url);
+      showToast('Image sent!', 'success');
     } catch (err) {
-      console.error('Upload Error:', err);
-      showToast('Image upload failed. Try again.', 'error');
+      console.error(err);
+      showToast('Image failed. Check preset.', 'error');
     } finally {
       setUploading(false);
       e.target.value = '';
+      textareaRef.current?.focus(); // Regain focus after upload interaction
     }
   };
 
   const copyId = () => {
     navigator.clipboard.writeText(myId).then(() => {
-      setCopied(true);
-      showToast('Your ID copied!', 'success');
+      setCopied(true); showToast('ID Copied!', 'success');
       setTimeout(() => setCopied(false), 2000);
     });
   };
 
-  const parseMessage = (msg) => {
-    if (msg._parsed) return msg._parsed;
-    try { return JSON.parse(msg.text); } catch { return { text: msg.text, mediaUrl: null }; }
-  };
+  /* ─── View ──────────────────────────────────────────────────────────── */
 
-  /* ─── RENDER ────────────────────────────────────────────────────────── */
   if (!activeChat) {
     return (
       <div className="connect-screen">
         <Toast {...toast} />
         <div className="connect-card">
           <div className="connect-header">
-            <KairoLogo size={60} />
-            <div className="connect-titles">
-              <h1>Kairo</h1>
-              <p>Secure, Cute & Anonymous</p>
-            </div>
+            <KairoLogo size={64} />
+            <div className="connect-titles"><h1>Kairo</h1><p>Secure & Anonymous Chat</p></div>
           </div>
-
           <div className="id-section">
-            <label>YOUR IDENTITY</label>
+            <label>YOUR ID</label>
             <div className="id-box">
               <span className="mono-id">{myId}</span>
-              <button onClick={copyId} className={`copy-btn ${copied ? 'active' : ''}`}>
-                {copied ? <Check size={18} /> : <Copy size={18} />}
-              </button>
+              <button onClick={copyId} className={`copy-btn ${copied ? 'active' : ''}`}>{copied ? <Check size={18} /> : <Copy size={18} />}</button>
             </div>
           </div>
-
           <form onSubmit={handleConnect} className="connect-form">
-            <div className="input-group">
-              <User size={18} className="input-icon" />
-              <input type="text" required placeholder="PARTNER ID" value={targetIdInput} onChange={e => setTargetIdInput(e.target.value)} spellCheck={false} />
-            </div>
-            <div className="input-group">
-              <KeyRound size={18} className="input-icon" />
-              <input type="password" required placeholder="ENCRYPTION KEY" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
-            </div>
-            <button type="submit" className="primary-button">Establish Connection</button>
+            <div className="input-group"><User size={18} className="input-icon" /><input type="text" required placeholder="PARTNER ID" value={targetIdInput} onChange={e => setTargetIdInput(e.target.value)} /></div>
+            <div className="input-group"><KeyRound size={18} className="input-icon" /><input type="password" required placeholder="ENCRYPTION KEY" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} /></div>
+            <button type="submit" className="primary-button">Start Chat</button>
           </form>
-
-          <div className="security-info">
-            <Lock size={12} />
-            <span>AES-256 E2EE · NO DATA STORED</span>
-          </div>
         </div>
       </div>
     );
@@ -398,56 +299,40 @@ function App() {
   return (
     <div className="app-container">
       <Toast {...toast} />
+      {showConfirm && <ConfirmModal onConfirm={endChat} onCancel={() => setShowConfirm(false)} />}
+      
       <div className="chat-container">
         <header className="app-header">
           <div className="header-left">
-            <button className="back-button" onClick={endChat}><ArrowLeft size={20} /></button>
+            <button className="back-button" onClick={() => setShowConfirm(true)}><ArrowLeft size={20} /></button>
             <div className="user-info">
               <span className="user-name mono-id">{activeChat}</span>
               <div className="status-indicator">
                 <span className={`dot ${isOnline ? 'online' : 'offline'}`} />
-                <span className="status-text">{isOnline ? 'Active Now' : 'Disconnected'}</span>
+                <span className="status-text">{isOnline ? 'Active' : 'Offline'}</span>
                 {isTyping && <span className="typing-text">typing...</span>}
               </div>
             </div>
           </div>
-          <div className="header-right">
-            <div className="secure-badge"><Lock size={12} /><span>SECURE</span></div>
-            <KairoLogo size={32} />
-          </div>
+          <div className="header-right"><div className="secure-badge"><ShieldCheck size={12} /><span>SECURE</span></div><KairoLogo size={32} /></div>
         </header>
 
         <div ref={messagesAreaRef} className="messages-area">
-          {messages.length === 0 && (
-            <div className="welcome-chat">
-              <ShieldCheck size={48} className="welcome-icon" />
-              <h3>Secure Channel Open</h3>
-              <p>Everything you say here is encrypted and self-destructs when you leave.</p>
-            </div>
-          )}
-
           {messages.map((msg, i) => {
-            const content = parseMessage(msg);
+            const c = msg._parsed || { text: msg.text, mediaUrl: null };
             return (
               <div key={msg.id || i} className={`message-row ${msg.me ? 'me' : 'other'}`}>
                 <div className="message-bubble">
-                  {content.mediaUrl && <EncryptedImage cloudinaryUrl={content.mediaUrl} cryptoKey={cryptoKey} />}
-                  {content.text && <p className="text-content">{content.text}</p>}
-                  <span className="timestamp">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
+                  {c.text && <p className="text-content">{c.text}</p>}
+                  <span className="timestamp">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             );
           })}
-          <div style={{ height: '1px' }} />
         </div>
 
-        {showEmoji && (
-          <div className="emoji-container">
-            <EmojiPicker theme="dark" onEmojiClick={onEmojiClick} height={350} width="100%" />
-          </div>
-        )}
+        {showEmoji && <div className="emoji-container"><EmojiPicker theme="dark" onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={350} width="100%" /></div>}
 
         <footer className="chat-footer">
           <div className="input-row">
@@ -459,19 +344,14 @@ function App() {
             <div className="input-box">
               <textarea
                 ref={textareaRef}
-                placeholder="Type a message..."
+                placeholder="Type..."
                 value={inputText}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
+                onChange={e => { setInputText(e.target.value); socket.emit('typing', { senderId: myId, receiverId: activeChat }); }}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
                 rows={1}
-                onInput={(e) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                }}
+                onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }}
               />
-              <button className="send-button" onClick={() => sendMessage(inputText)} disabled={!inputText.trim()}>
-                <Send size={18} />
-              </button>
+              <button className="send-button" onClick={() => sendMessage(inputText)} disabled={!inputText.trim()}><Send size={18} /></button>
             </div>
           </div>
         </footer>
