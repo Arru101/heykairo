@@ -3,21 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="Kairo – Military-grade encrypted real-time communications. No login. No data stored." />
-    <meta name="theme-color" content="#09090b" />
-    <title>Kairo | Secure Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Kairo – Military-grade AES-256 encrypted real-time chat. Zero-knowledge. No login. No data stored." />
+    <meta name="theme-color" content="#07070a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Kairo" />
+    <title>Kairo · Secure Encrypted Chat</title>
     <!-- Prevent browser from caching sensitive pages -->
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <style>
-      /* Prevent image drag on the entire page */
-      img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }
-      /* Prevent text selection on UI chrome */
+      /* Prevent text selection on UI chrome only */
       body { -webkit-user-select: none; user-select: none; }
-      /* Re-enable text selection only in chat messages and inputs */
-      p, textarea, input { -webkit-user-select: text; user-select: text; }
+      /* Re-enable for chat content and inputs */
+      p, textarea, input, .msg-text { -webkit-user-select: text; user-select: text; }
+      /* NOTE: Do NOT set pointer-events:none globally on img — breaks image preview */
+      img { -webkit-user-drag: none; }
     </style>
   </head>
   <body>
