@@ -287,8 +287,28 @@ function App() {
             </div>
           </div>
           <form onSubmit={handleConnect} className="connect-form">
-            <div className="input-group"><User size={18} className="input-icon" /><input type="text" required placeholder="PARTNER ID" value={targetIdInput} onChange={e => setTargetIdInput(e.target.value)} /></div>
-            <div className="input-group"><KeyRound size={18} className="input-icon" /><input type="password" required placeholder="ENCRYPTION KEY" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} /></div>
+            <div className="input-group">
+              <User size={18} className="input-icon" />
+              <input 
+                type="text" 
+                required 
+                placeholder="PARTNER ID" 
+                value={targetIdInput} 
+                onChange={e => setTargetIdInput(e.target.value.toUpperCase())} 
+                className="uppercase-input"
+                spellCheck={false} 
+              />
+            </div>
+            <div className="input-group">
+              <KeyRound size={18} className="input-icon" />
+              <input 
+                type="password" 
+                required 
+                placeholder="ENCRYPTION KEY" 
+                value={passwordInput} 
+                onChange={e => setPasswordInput(e.target.value)} 
+              />
+            </div>
             <button type="submit" className="primary-button">Start Chat</button>
           </form>
         </div>
