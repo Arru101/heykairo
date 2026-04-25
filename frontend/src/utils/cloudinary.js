@@ -9,33 +9,42 @@ const UPLOAD_PRESET = 'purechat_upload';
 /**
  * Uploads encrypted binary data.
  * Even though it's an image originally, once encrypted it's just raw bytes.
- * We use the 'auto' resource type so Cloudinary can handle it based on the preset.
+ * Using a Blob with multipart/form-data is the most robust method.
  */
 export const uploadEncryptedToCloudinary = async (encryptedBase64) => {
-  // Use a proper data URI format. Cloudinary's unsigned upload via preset
-  // is often picky about the resource_type matching the preset's settings.
-  const dataUri = `data:application/octet-stream;base64,${encryptedBase64}`;
+  try {
+    // 1. Convert base64 ciphertext back to binary bytes
+    const binaryString = window.atob(encryptedBase64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    // Create a Blob to send as a file
+    const blob = new Blob([bytes], { type: 'application/octet-stream' });
 
-  const formData = new FormData();
-  formData.append('file', dataUri);
-  formData.append('upload_preset', UPLOAD_PRESET);
-  
-  // We specify 'auto' to let Cloudinary decide, but usually 'raw' is needed for ciphertext.
-  // If the user's preset is set to 'Image', we might need to send it as an image.
-  // Let's try the most compatible endpoint first.
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
-    { method: 'POST', body: formData }
-  );
+    // 2. Prepare Form Data
+    const formData = new FormData();
+    formData.append('file', blob, 'encrypted_payload.bin');
+    formData.append('upload_preset', UPLOAD_PRESET);
+    
+    // 3. Use 'auto/upload' to let Cloudinary determine the type based on the preset
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
+      { method: 'POST', body: formData }
+    );
 
-  if (!res.ok) {
-    const errBody = await res.json().catch(() => ({}));
-    console.error('Cloudinary Error Detail:', errBody);
-    throw new Error(errBody?.error?.message || `Upload failed with status ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.error('Cloudinary Error Detail:', errBody);
+      throw new Error(errBody?.error?.message || `Upload failed with status ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.secure_url;
+  } catch (err) {
+    console.error('Cloudinary Upload Exception:', err);
+    throw err;
   }
-
-  const data = await res.json();
-  return data.secure_url;
 };
 
 /**

@@ -337,21 +337,28 @@ function App() {
         <footer className="chat-footer">
           <div className="input-row">
             <button className={`footer-icon ${showEmoji ? 'active' : ''}`} onClick={() => setShowEmoji(!showEmoji)}><Smile size={22} /></button>
-            <label className="footer-icon">
-              {uploading ? <Loader2 size={22} className="spin" /> : <ImageIcon size={22} />}
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
-            </label>
-            <div className="input-box">
-              <textarea
-                ref={textareaRef}
-                placeholder="Type..."
-                value={inputText}
-                onChange={e => { setInputText(e.target.value); socket.emit('typing', { senderId: myId, receiverId: activeChat }); }}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
-                rows={1}
-                onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }}
-              />
-              <button className="send-button" onClick={() => sendMessage(inputText)} disabled={!inputText.trim()}><Send size={18} /></button>
+              <label className="footer-icon" onMouseDown={e => e.preventDefault()}>
+                {uploading ? <Loader2 size={22} className="spin" /> : <ImageIcon size={22} />}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
+              </label>
+              <div className="input-box">
+                <textarea
+                  ref={textareaRef}
+                  placeholder="Type..."
+                  value={inputText}
+                  onChange={e => { setInputText(e.target.value); socket.emit('typing', { senderId: myId, receiverId: activeChat }); }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
+                  rows={1}
+                  onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px'; }}
+                />
+                <button 
+                  className="send-button" 
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => sendMessage(inputText)} 
+                  disabled={!inputText.trim()}
+                >
+                  <Send size={18} />
+                </button>
             </div>
           </div>
         </footer>
