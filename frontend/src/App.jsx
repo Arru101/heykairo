@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Send, Image as ImageIcon, Smile, ArrowLeft, Lock,
-  Loader2, KeyRound, User, ShieldCheck, Copy, Check, X, ZoomIn
+  Loader2, KeyRound, User, ShieldCheck, Copy, Check, X, ZoomIn, Info
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 
@@ -12,37 +12,50 @@ import { initSecurity, createEphemeralBlobUrl, revokeBlobUrl } from './utils/sec
 
 const generateId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
-/* ─── Kairo SVG Logo ─────────────────────────────────────────────────────── */
-function KairoLogo({ size = 28 }) {
+/* ─── Cute Minion Kairo Logo ─────────────────────────────────────────── */
+function KairoLogo({ size = 32 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#60a5fa" />
-          <stop offset="100%" stopColor="#2563eb" />
-        </linearGradient>
-      </defs>
-      <rect width="512" height="512" rx="100" fill="#0d0d18" />
-      <path d="M256 56 L416 112 L416 264 C416 356 256 456 256 456 C256 456 96 356 96 264 L96 112 Z"
-        fill="none" stroke="url(#lg1)" strokeWidth="18" strokeLinejoin="round" />
-      <rect x="196" y="172" width="30" height="168" rx="8" fill="url(#lg1)" />
-      <path d="M226 260 L312 172 L278 172 L204 240 Z" fill="url(#lg1)" />
-      <path d="M226 260 L312 340 L278 340 L204 280 Z" fill="url(#lg1)" />
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="96" rx="30" ry="22" fill="#3b6ff5"/>
+      <circle cx="60" cy="52" r="36" fill="#FFD93D"/>
+      <circle cx="24" cy="50" r="7" fill="#F5C518"/>
+      <circle cx="96" cy="50" r="7" fill="#F5C518"/>
+      <rect x="24" y="38" width="72" height="22" rx="11" fill="#555566"/>
+      <circle cx="60" cy="49" r="14" fill="white"/>
+      <circle cx="60" cy="49" r="10" fill="#4A9EFF"/>
+      <circle cx="60" cy="49" r="5" fill="#111122"/>
+      <circle cx="64" cy="44" r="2.5" fill="white"/>
+      <circle cx="57" cy="52" r="1.2" fill="white" opacity="0.7"/>
+      <circle cx="60" cy="49" r="14" fill="none" stroke="#333344" strokeWidth="2"/>
+      <circle cx="28" cy="49" r="3" fill="#444455"/>
+      <circle cx="92" cy="49" r="3" fill="#444455"/>
+      <ellipse cx="30" cy="68" rx="9" ry="6" fill="#FFB347" opacity="0.45"/>
+      <ellipse cx="90" cy="68" rx="9" ry="6" fill="#FFB347" opacity="0.45"/>
+      <path d="M42 72 Q60 86 78 72" stroke="#5C3A1E" strokeWidth="3" fill="#FF8C69" strokeLinecap="round" strokeLinejoin="round"/>
+      <rect x="51" y="73" width="8" height="7" rx="2" fill="white"/>
+      <rect x="61" y="73" width="8" height="7" rx="2" fill="white"/>
+      <line x1="60" y1="73" x2="60" y2="80" stroke="#ddd" strokeWidth="1"/>
+      <rect x="44" y="84" width="32" height="26" rx="4" fill="#2d5de0"/>
+      <text x="60" y="103" textAnchor="middle" fill="white" fontSize="14" fontWeight="800" fontFamily="monospace">K</text>
+      <rect x="48" y="76" width="8" height="14" rx="4" fill="#2d5de0"/>
+      <rect x="64" y="76" width="8" height="14" rx="4" fill="#2d5de0"/>
+      <circle cx="52" cy="80" r="2" fill="#60a5fa"/>
+      <circle cx="68" cy="80" r="2" fill="#60a5fa"/>
     </svg>
   );
 }
 
-/* ─── Toast ──────────────────────────────────────────────────────────────── */
-function Toast({ message, visible }) {
+/* ─── Toast Component ────────────────────────────────────────────────── */
+function Toast({ message, type, visible }) {
   return (
-    <div className={`toast${visible ? ' show' : ''}`}>
-      <Check size={14} color="#22c55e" />
+    <div className={`toast ${type}${visible ? ' show' : ''}`}>
+      {type === 'success' ? <Check size={14} /> : type === 'error' ? <Info size={14} /> : <Check size={14} />}
       {message}
     </div>
   );
 }
 
-/* ─── Image Preview Modal ────────────────────────────────────────────────── */
+/* ─── Image Preview Modal ────────────────────────────────────────────── */
 function ImageModal({ src, onClose }) {
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -56,25 +69,17 @@ function ImageModal({ src, onClose }) {
         src={src}
         alt="preview"
         onClick={e => e.stopPropagation()}
-        style={{ pointerEvents: 'auto' }}
+        className="modal-image"
         draggable={false}
       />
-      <button
-        onClick={onClose}
-        style={{
-          position: 'fixed', top: 16, right: 16,
-          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: '50%', width: 40, height: 40, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
-        }}
-      >
-        <X size={18} />
+      <button className="modal-close" onClick={onClose}>
+        <X size={20} />
       </button>
     </div>
   );
 }
 
-/* ─── Encrypted Image ────────────────────────────────────────────────────── */
+/* ─── Encrypted Image Component ───────────────────────────────────────── */
 function EncryptedImage({ cloudinaryUrl, cryptoKey }) {
   const [blobUrl, setBlobUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,13 +91,18 @@ function EncryptedImage({ cloudinaryUrl, cryptoKey }) {
     let cancelled = false;
     setLoading(true); setFailed(false); setBlobUrl(null);
     (async () => {
-      const encBase64 = await fetchEncryptedBlob(cloudinaryUrl);
-      if (!encBase64 || cancelled) { if (!cancelled) setFailed(true); setLoading(false); return; }
-      const result = await decryptFile(encBase64, cryptoKey);
-      if (!result || cancelled) { if (!cancelled) setFailed(true); setLoading(false); return; }
-      const url = createEphemeralBlobUrl(result.bytes, result.mimeType);
-      objRef.current = url;
-      if (!cancelled) { setBlobUrl(url); setLoading(false); }
+      try {
+        const encBase64 = await fetchEncryptedBlob(cloudinaryUrl);
+        if (!encBase64 || cancelled) throw new Error('Fetch failed');
+        const result = await decryptFile(encBase64, cryptoKey);
+        if (!result || cancelled) throw new Error('Decrypt failed');
+        const url = createEphemeralBlobUrl(result.bytes, result.mimeType);
+        objRef.current = url;
+        if (!cancelled) { setBlobUrl(url); setLoading(false); }
+      } catch (e) {
+        console.error('Image load error:', e);
+        if (!cancelled) { setFailed(true); setLoading(false); }
+      }
     })();
     return () => {
       cancelled = true;
@@ -101,54 +111,38 @@ function EncryptedImage({ cloudinaryUrl, cryptoKey }) {
   }, [cloudinaryUrl, cryptoKey]);
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', color: '#8888aa' }}>
-      <Loader2 size={14} className="spin" />
-      <span style={{ fontSize: 12 }}>Decrypting…</span>
+    <div className="image-loader">
+      <Loader2 size={16} className="spin" />
+      <span>Decrypting Image...</span>
     </div>
   );
-  if (failed) return <p style={{ fontSize: 12, color: '#8888aa', fontStyle: 'italic' }}>Image unavailable</p>;
+  if (failed) return <div className="image-failed">Image could not be decrypted</div>;
 
   return (
     <>
-      <div style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }}
-        onClick={() => setPreview(true)}>
+      <div className="message-image-container" onClick={() => setPreview(true)}>
         <img
           src={blobUrl}
-          alt="secure attachment"
+          alt="secure"
+          className="message-image"
           draggable={false}
           onContextMenu={e => e.preventDefault()}
-          style={{
-            display: 'block',
-            borderRadius: 10,
-            maxWidth: '100%',
-            maxHeight: 260,
-            objectFit: 'cover',
-            pointerEvents: 'auto',
-            userSelect: 'none',
-            marginBottom: 4
-          }}
         />
-        <div style={{
-          position: 'absolute', bottom: 8, right: 8,
-          background: 'rgba(0,0,0,0.55)', borderRadius: 6, padding: '3px 5px',
-          display: 'flex', alignItems: 'center', gap: 3
-        }}>
-          <ZoomIn size={12} color="#fff" />
-        </div>
+        <div className="image-zoom-overlay"><ZoomIn size={16} /></div>
       </div>
       {preview && <ImageModal src={blobUrl} onClose={() => setPreview(false)} />}
     </>
   );
 }
 
-/* ─── App ────────────────────────────────────────────────────────────────── */
+/* ─── Main Application ────────────────────────────────────────────────── */
 function App() {
   const [myId, setMyId] = useState('');
   const [targetIdInput, setTargetIdInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [cryptoKey, setCryptoKey] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '' });
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
 
   const [activeChat, setActiveChat] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
@@ -159,7 +153,6 @@ function App() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const messagesEndRef = useRef(null);
   const messagesAreaRef = useRef(null);
   const textareaRef = useRef(null);
   const typingTimeout = useRef(null);
@@ -171,13 +164,36 @@ function App() {
 
   useEffect(() => { initSecurity(); }, []);
 
-  /* Show toast helper */
-  const showToast = useCallback((message) => {
-    setToast({ visible: true, message });
-    setTimeout(() => setToast(t => ({ ...t, visible: false })), 2500);
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
   }, []);
 
-  /* Socket setup */
+  /* Mobile Layout Fix for Keyboard */
+  useEffect(() => {
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        const height = window.visualViewport.height;
+        document.documentElement.style.setProperty('--vh', `${height}px`);
+        if (messagesAreaRef.current) {
+          messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
+        }
+      }
+    };
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+      handleViewportChange();
+    }
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+      }
+    };
+  }, [activeChat]);
+
+  /* Socket Handlers */
   useEffect(() => {
     let savedId = localStorage.getItem('kairo_id');
     if (!savedId) { savedId = generateId(); localStorage.setItem('kairo_id', savedId); }
@@ -219,7 +235,7 @@ function App() {
     };
   }, []);
 
-  /* Presence polling */
+  /* Presence */
   useEffect(() => {
     if (!activeChat) return;
     const poll = () => socket.emit('check_status', activeChat, res => setIsOnline(res?.isOnline ?? false));
@@ -228,22 +244,12 @@ function App() {
     return () => clearInterval(iv);
   }, [activeChat]);
 
-  /* Auto-scroll to bottom */
+  /* Auto-scroll */
   useEffect(() => {
-    if (!messagesAreaRef.current) return;
-    messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
+    if (messagesAreaRef.current) {
+      messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
+    }
   }, [messages, isTyping]);
-
-  /* Keep scroll at bottom when keyboard opens on mobile */
-  useEffect(() => {
-    const area = messagesAreaRef.current;
-    if (!area) return;
-    const obs = new ResizeObserver(() => {
-      area.scrollTop = area.scrollHeight;
-    });
-    obs.observe(area);
-    return () => obs.disconnect();
-  }, [activeChat]);
 
   const handleConnect = async (e) => {
     e.preventDefault();
@@ -254,8 +260,9 @@ function App() {
       const target = targetIdInput.toUpperCase().trim();
       setActiveChat(target); activeChatRef.current = target;
       setMessages([]);
+      showToast('Secure channel established!', 'success');
     } catch {
-      alert('Failed to establish secure connection.');
+      showToast('Encryption key mismatch or error.', 'error');
     }
   };
 
@@ -306,14 +313,11 @@ function App() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); }
   };
 
-  const onEmojiClick = (emojiObj) => {
-    setInputText(prev => prev + emojiObj.emoji);
-    textareaRef.current?.focus();
-  };
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { showToast('File too large (max 10MB)', 'error'); return; }
+
     const key = cryptoKeyRef.current;
     if (!key) return;
     setUploading(true);
@@ -322,12 +326,11 @@ function App() {
       const url = await uploadEncryptedToCloudinary(encryptedBase64);
       if (url) {
         await sendMessage('', url);
-        showToast('Image sent securely');
-      } else {
-        showToast('Upload failed — try again');
+        showToast('Image sent securely!', 'success');
       }
-    } catch {
-      showToast('Upload error');
+    } catch (err) {
+      console.error('Upload Error:', err);
+      showToast('Image upload failed. Try again.', 'error');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -337,7 +340,7 @@ function App() {
   const copyId = () => {
     navigator.clipboard.writeText(myId).then(() => {
       setCopied(true);
-      showToast('ID copied to clipboard');
+      showToast('Your ID copied!', 'success');
       setTimeout(() => setCopied(false), 2000);
     });
   };
@@ -347,214 +350,131 @@ function App() {
     try { return JSON.parse(msg.text); } catch { return { text: msg.text, mediaUrl: null }; }
   };
 
-  /* ─── CONNECTION SCREEN ──────────────────────────────────────────────── */
+  /* ─── RENDER ────────────────────────────────────────────────────────── */
   if (!activeChat) {
     return (
       <div className="connect-screen">
-        <Toast message={toast.message} visible={toast.visible} />
+        <Toast {...toast} />
         <div className="connect-card">
-          {/* Logo + title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, paddingBottom: 24, borderBottom: '1px solid var(--border-subtle)' }}>
-            <KairoLogo size={40} />
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.2 }}>Kairo</h1>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, letterSpacing: '0.04em' }}>Military-Grade Encrypted Network</p>
+          <div className="connect-header">
+            <KairoLogo size={60} />
+            <div className="connect-titles">
+              <h1>Kairo</h1>
+              <p>Secure, Cute & Anonymous</p>
             </div>
           </div>
 
-          {/* Your ID */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Your Identity</label>
-            <div style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="mono" style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '0.18em' }}>{myId}</span>
-              <button onClick={copyId} title="Copy ID" style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#22c55e' : 'var(--text-muted)', transition: 'color 0.2s', padding: 4 }}>
+          <div className="id-section">
+            <label>YOUR IDENTITY</label>
+            <div className="id-box">
+              <span className="mono-id">{myId}</span>
+              <button onClick={copyId} className={`copy-btn ${copied ? 'active' : ''}`}>
                 {copied ? <Check size={18} /> : <Copy size={18} />}
               </button>
             </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleConnect} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div className="pro-input-wrap">
-              <span className="pro-input-icon"><User size={15} /></span>
-              <input type="text" required placeholder="Partner ID (e.g. X4K9P2)"
-                value={targetIdInput}
-                onChange={e => setTargetIdInput(e.target.value)}
-                style={{ textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em' }}
-              />
+          <form onSubmit={handleConnect} className="connect-form">
+            <div className="input-group">
+              <User size={18} className="input-icon" />
+              <input type="text" required placeholder="PARTNER ID" value={targetIdInput} onChange={e => setTargetIdInput(e.target.value)} spellCheck={false} />
             </div>
-            <div className="pro-input-wrap">
-              <span className="pro-input-icon"><KeyRound size={15} /></span>
-              <input type="password" required placeholder="Shared Encryption Key"
-                value={passwordInput}
-                onChange={e => setPasswordInput(e.target.value)}
-              />
+            <div className="input-group">
+              <KeyRound size={18} className="input-icon" />
+              <input type="password" required placeholder="ENCRYPTION KEY" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
             </div>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.65, margin: '2px 0' }}>
-              Both parties must enter the <strong style={{ color: 'var(--text-secondary)' }}>identical key</strong> to open the encrypted tunnel. Your key never leaves this device.
-            </p>
-            <button type="submit" className="btn-primary">
-              Establish Encrypted Connection
-            </button>
+            <button type="submit" className="primary-button">Establish Connection</button>
           </form>
 
-          {/* Security footer */}
-          <div className="security-bar" style={{ marginTop: 20 }}>
-            <Lock size={10} color="var(--accent)" />
-            <span>AES-256-GCM · Zero-Knowledge · No Logs</span>
+          <div className="security-info">
+            <Lock size={12} />
+            <span>AES-256 E2EE · NO DATA STORED</span>
           </div>
         </div>
       </div>
     );
   }
 
-  /* ─── CHAT SCREEN ────────────────────────────────────────────────────── */
   return (
-    <div style={{ width: '100%', height: '100%', background: 'var(--bg-app)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Toast message={toast.message} visible={toast.visible} />
-      <div className="chat-shell">
-
-        {/* ── Header ── */}
-        <header className="chat-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button className="icon-btn" onClick={endChat} title="End chat" style={{ minWidth: 36, minHeight: 36, padding: 8 }}>
-              <ArrowLeft size={17} />
-            </button>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <User size={15} color="var(--text-muted)" />
-            </div>
-            <div>
-              <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '0.1em' }}>{activeChat}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                <div className={`online-dot ${isOnline ? 'on' : 'off'}`} />
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{isOnline ? 'Online' : 'Offline'}</span>
-                {isTyping && <span style={{ fontSize: 11, color: 'var(--accent-light)', fontStyle: 'italic' }}>· typing…</span>}
+    <div className="app-container">
+      <Toast {...toast} />
+      <div className="chat-container">
+        <header className="app-header">
+          <div className="header-left">
+            <button className="back-button" onClick={endChat}><ArrowLeft size={20} /></button>
+            <div className="user-info">
+              <span className="user-name mono-id">{activeChat}</span>
+              <div className="status-indicator">
+                <span className={`dot ${isOnline ? 'online' : 'offline'}`} />
+                <span className="status-text">{isOnline ? 'Active Now' : 'Disconnected'}</span>
+                {isTyping && <span className="typing-text">typing...</span>}
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div className="e2ee-badge">
-              <Lock size={10} color="var(--accent)" />
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.1em' }}>E2EE</span>
-            </div>
-            <KairoLogo size={26} />
+          <div className="header-right">
+            <div className="secure-badge"><Lock size={12} /><span>SECURE</span></div>
+            <KairoLogo size={32} />
           </div>
         </header>
 
-        {/* ── Messages ── */}
-        <div ref={messagesAreaRef} className="messages-area hide-scroll">
+        <div ref={messagesAreaRef} className="messages-area">
           {messages.length === 0 && (
-            <div className="empty-state">
-              <Lock size={36} color="var(--border)" />
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.7 }}>
-                End-to-end encrypted tunnel established.<br />No messages yet.
-              </p>
+            <div className="welcome-chat">
+              <ShieldCheck size={48} className="welcome-icon" />
+              <h3>Secure Channel Open</h3>
+              <p>Everything you say here is encrypted and self-destructs when you leave.</p>
             </div>
           )}
 
           {messages.map((msg, i) => {
             const content = parseMessage(msg);
             return (
-              <div key={msg.id || i} style={{ display: 'flex', justifyContent: msg.me ? 'flex-end' : 'flex-start', width: '100%' }}>
-                <div style={{
-                  maxWidth: 'min(78%, 480px)',
-                  padding: content.mediaUrl ? '8px 8px 6px' : '10px 14px',
-                  borderRadius: msg.me ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  background: msg.me
-                    ? 'linear-gradient(135deg, #2d5de0 0%, #3b6ff5 100%)'
-                    : 'var(--bg-elevated)',
-                  border: msg.me ? 'none' : '1px solid var(--border)',
-                  display: 'flex', flexDirection: 'column',
-                  boxShadow: msg.me ? '0 4px 16px rgba(59,111,245,0.25)' : 'var(--shadow-sm)'
-                }}>
-                  {content.mediaUrl && (
-                    <EncryptedImage cloudinaryUrl={content.mediaUrl} cryptoKey={cryptoKey} />
-                  )}
-                  {content.text && (
-                    <p style={{ fontSize: 14, lineHeight: 1.6, color: msg.me ? '#fff' : 'var(--text-primary)', margin: 0, wordBreak: 'break-word', whiteSpace: 'pre-wrap', userSelect: 'text' }}>
-                      {content.text}
-                    </p>
-                  )}
-                  <span style={{ fontSize: 10, color: msg.me ? 'rgba(255,255,255,0.4)' : 'var(--text-muted)', marginTop: 5, alignSelf: msg.me ? 'flex-end' : 'flex-start', fontWeight: 500 }}>
+              <div key={msg.id || i} className={`message-row ${msg.me ? 'me' : 'other'}`}>
+                <div className="message-bubble">
+                  {content.mediaUrl && <EncryptedImage cloudinaryUrl={content.mediaUrl} cryptoKey={cryptoKey} />}
+                  {content.text && <p className="text-content">{content.text}</p>}
+                  <span className="timestamp">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               </div>
             );
           })}
-
-          {/* Typing bubble */}
-          {isTyping && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '16px 16px 16px 4px', display: 'inline-flex' }}>
-                <div className="typing-dots">
-                  <span /><span /><span />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} style={{ height: 1 }} />
+          <div style={{ height: '1px' }} />
         </div>
 
-        {/* ── Emoji Picker ── */}
         {showEmoji && (
-          <div style={{ position: 'absolute', bottom: 70, left: 12, zIndex: 50, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
-            <EmojiPicker theme="dark" onEmojiClick={onEmojiClick} height={360} width={320} />
+          <div className="emoji-container">
+            <EmojiPicker theme="dark" onEmojiClick={onEmojiClick} height={350} width="100%" />
           </div>
         )}
 
-        {/* ── Input Bar ── */}
-        <div className="input-bar">
+        <footer className="chat-footer">
           <div className="input-row">
-            {/* Emoji */}
-            <button
-              className={`icon-btn${showEmoji ? ' active' : ''}`}
-              onClick={() => { setShowEmoji(v => !v); textareaRef.current?.focus(); }}
-              title="Emoji"
-            >
-              <Smile size={19} strokeWidth={2} />
-            </button>
-
-            {/* Image upload */}
-            <label className={`icon-btn${uploading ? ' uploading' : ''}`} title="Send image" style={{ cursor: 'pointer' }}>
-              {uploading
-                ? <Loader2 size={19} className="spin" />
-                : <ImageIcon size={19} strokeWidth={2} />}
+            <button className={`footer-icon ${showEmoji ? 'active' : ''}`} onClick={() => setShowEmoji(!showEmoji)}><Smile size={22} /></button>
+            <label className="footer-icon">
+              {uploading ? <Loader2 size={22} className="spin" /> : <ImageIcon size={22} />}
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
             </label>
-
-            {/* Textarea + send */}
-            <div className="input-field-wrap">
+            <div className="input-box">
               <textarea
                 ref={textareaRef}
-                className="chat-textarea hide-scroll"
-                placeholder="Message…"
+                placeholder="Type a message..."
                 value={inputText}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 rows={1}
-                style={{ overflowY: inputText.split('\n').length > 3 ? 'auto' : 'hidden' }}
-                onInput={e => {
+                onInput={(e) => {
                   e.target.style.height = 'auto';
                   e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
                 }}
               />
-              <button
-                className="send-btn"
-                onClick={() => sendMessage(inputText)}
-                disabled={!inputText.trim()}
-                style={{
-                  background: inputText.trim() ? 'linear-gradient(135deg, #2d5de0, #3b6ff5)' : 'var(--bg-hover)',
-                  color: inputText.trim() ? '#fff' : 'var(--text-muted)',
-                  boxShadow: inputText.trim() ? '0 2px 10px rgba(59,111,245,0.35)' : 'none'
-                }}
-              >
-                <Send size={16} strokeWidth={2.5} />
+              <button className="send-button" onClick={() => sendMessage(inputText)} disabled={!inputText.trim()}>
+                <Send size={18} />
               </button>
             </div>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );

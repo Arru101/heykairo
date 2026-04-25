@@ -1,82 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="kGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:0" />
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <filter id="outerGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <clipPath id="shieldClip">
-      <path d="M256 32 L432 96 L432 256 C432 358 256 480 256 480 C256 480 80 358 80 256 L80 96 Z"/>
-    </clipPath>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- No background - transparent -->
 
-  <!-- Background -->
-  <rect width="512" height="512" fill="#09090b" rx="80"/>
+  <!-- Body (overalls) -->
+  <ellipse cx="60" cy="96" rx="30" ry="22" fill="#3b6ff5"/>
 
-  <!-- Outer glow ring -->
-  <path d="M256 32 L432 96 L432 256 C432 358 256 480 256 480 C256 480 80 358 80 256 L80 96 Z"
-    fill="none" stroke="#3b82f6" stroke-width="3" opacity="0.25" filter="url(#outerGlow)"/>
+  <!-- Head -->
+  <circle cx="60" cy="52" r="36" fill="#FFD93D"/>
 
-  <!-- Shield body -->
-  <path d="M256 44 L420 104 L420 256 C420 350 256 468 256 468 C256 468 92 350 92 256 L92 104 Z"
-    fill="url(#shieldGrad)" opacity="0.15"/>
+  <!-- Ear bumps -->
+  <circle cx="24" cy="50" r="7" fill="#F5C518"/>
+  <circle cx="96" cy="50" r="7" fill="#F5C518"/>
 
-  <!-- Shield outline -->
-  <path d="M256 44 L420 104 L420 256 C420 350 256 468 256 468 C256 468 92 350 92 256 L92 104 Z"
-    fill="none" stroke="url(#kGrad)" stroke-width="2.5" filter="url(#glow)"/>
+  <!-- Goggle strap - grey band -->
+  <rect x="24" y="38" width="72" height="22" rx="11" fill="#555566"/>
 
-  <!-- Inner shield highlight -->
-  <path d="M256 70 L396 122 L396 256 C396 336 256 440 256 440 C256 440 116 336 116 256 L116 122 Z"
-    fill="url(#glowGrad)" opacity="0.3"/>
+  <!-- Goggle glass -->
+  <circle cx="60" cy="49" r="14" fill="white"/>
+  <!-- Iris -->
+  <circle cx="60" cy="49" r="10" fill="#4A9EFF"/>
+  <!-- Pupil -->
+  <circle cx="60" cy="49" r="5" fill="#111122"/>
+  <!-- Shine 1 -->
+  <circle cx="64" cy="44" r="2.5" fill="white"/>
+  <!-- Shine 2 -->
+  <circle cx="57" cy="52" r="1.2" fill="white" opacity="0.7"/>
+  <!-- Goggle rim -->
+  <circle cx="60" cy="49" r="14" fill="none" stroke="#333344" stroke-width="2"/>
 
-  <!-- Circuit board decorative lines -->
-  <g stroke="#3b82f6" stroke-width="1" opacity="0.2" fill="none">
-    <line x1="140" y1="160" x2="180" y2="160"/>
-    <line x1="180" y1="160" x2="180" y2="140"/>
-    <line x1="332" y1="160" x2="372" y2="160"/>
-    <line x1="332" y1="160" x2="332" y2="140"/>
-    <line x1="140" y1="360" x2="180" y2="360"/>
-    <line x1="180" y1="360" x2="180" y2="380"/>
-    <line x1="332" y1="360" x2="372" y2="360"/>
-    <line x1="332" y1="360" x2="332" y2="380"/>
-    <!-- Node dots -->
-    <circle cx="180" cy="140" r="3" fill="#3b82f6" opacity="0.5"/>
-    <circle cx="332" cy="140" r="3" fill="#3b82f6" opacity="0.5"/>
-    <circle cx="180" cy="380" r="3" fill="#3b82f6" opacity="0.5"/>
-    <circle cx="332" cy="380" r="3" fill="#3b82f6" opacity="0.5"/>
-  </g>
+  <!-- Goggle strap bolts -->
+  <circle cx="28" cy="49" r="3" fill="#444455"/>
+  <circle cx="92" cy="49" r="3" fill="#444455"/>
 
-  <!-- K lettermark - main symbol -->
-  <g filter="url(#glow)">
-    <!-- K vertical stroke -->
-    <rect x="196" y="168" width="28" height="176" rx="6" fill="url(#kGrad)"/>
-    <!-- K upper arm -->
-    <path d="M224 256 L316 168 L288 168 L210 232 Z" fill="url(#kGrad)"/>
-    <!-- K lower arm -->
-    <path d="M224 256 L316 344 L288 344 L210 280 Z" fill="url(#kGrad)"/>
-  </g>
+  <!-- Cheeks blush -->
+  <ellipse cx="30" cy="68" rx="9" ry="6" fill="#FFB347" opacity="0.45"/>
+  <ellipse cx="90" cy="68" rx="9" ry="6" fill="#FFB347" opacity="0.45"/>
 
-  <!-- Subtle inner light -->
-  <ellipse cx="256" cy="200" rx="80" ry="40" fill="#3b82f6" opacity="0.05"/>
+  <!-- Smile -->
+  <path d="M42 72 Q60 86 78 72" stroke="#5C3A1E" stroke-width="3" fill="#FF8C69" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Teeth -->
+  <rect x="51" y="73" width="8" height="7" rx="2" fill="white"/>
+  <rect x="61" y="73" width="8" height="7" rx="2" fill="white"/>
+  <!-- Tooth gap line -->
+  <line x1="60" y1="73" x2="60" y2="80" stroke="#ddd" stroke-width="1"/>
+
+  <!-- Overall bib -->
+  <rect x="44" y="84" width="32" height="26" rx="4" fill="#2d5de0"/>
+  <!-- K on overalls -->
+  <text x="60" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="800"
+    font-family="'JetBrains Mono', 'Courier New', monospace" letter-spacing="0">K</text>
+
+  <!-- Overall straps -->
+  <rect x="48" y="76" width="8" height="14" rx="4" fill="#2d5de0"/>
+  <rect x="64" y="76" width="8" height="14" rx="4" fill="#2d5de0"/>
+
+  <!-- Strap buttons -->
+  <circle cx="52" cy="80" r="2" fill="#60a5fa"/>
+  <circle cx="68" cy="80" r="2" fill="#60a5fa"/>
+
+  <!-- Little arms -->
+  <ellipse cx="22" cy="86" rx="7" ry="11" rx="7" fill="#FFD93D" transform="rotate(-15 22 86)"/>
+  <ellipse cx="98" cy="86" rx="7" ry="11" fill="#FFD93D" transform="rotate(15 98 86)"/>
 </svg>
