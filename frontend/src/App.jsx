@@ -357,9 +357,9 @@ function App() {
 
         <footer className="chat-footer">
           <div className="input-row">
-            <button className={`footer-icon ${showEmoji ? 'active' : ''}`} onClick={() => setShowEmoji(!showEmoji)}><Smile size={22} /></button>
+            <button className={`footer-icon ${showEmoji ? 'active' : ''}`} onClick={() => setShowEmoji(!showEmoji)}><Smile size={24} /></button>
               <label className="footer-icon" onMouseDown={e => e.preventDefault()}>
-                {uploading ? <Loader2 size={22} className="spin" /> : <ImageIcon size={22} />}
+                {uploading ? <Loader2 size={24} className="spin" /> : <ImageIcon size={24} />}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
               </label>
               <div className="input-box">
