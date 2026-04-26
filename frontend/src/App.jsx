@@ -335,7 +335,7 @@ function App() {
               </div>
             </div>
           </div>
-          <div className="header-right"><div className="secure-badge"><ShieldCheck size={12} /><span>SECURE</span></div><KairoLogo size={32} /></div>
+          <div className="header-right"><div className="secure-badge"><ShieldCheck size={12} /><span>SECURE</span></div><KairoLogo size={22} /></div>
         </header>
 
         <div ref={messagesAreaRef} className="messages-area">
@@ -353,7 +353,7 @@ function App() {
           })}
         </div>
 
-        {showEmoji && <div className="emoji-container"><EmojiPicker theme="dark" onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={280} width="100%" /></div>}
+        {showEmoji && <div className="emoji-container"><EmojiPicker theme="dark" previewConfig={{ showPreview: false }} onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={280} width="100%" /></div>}
 
         <footer className="chat-footer">
           <div className="input-row">
@@ -370,7 +370,7 @@ function App() {
                   onChange={e => { setInputText(e.target.value); socket.emit('typing', { senderId: myId, receiverId: activeChat }); }}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
                   rows={1}
-                  onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px'; }}
+                  onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px'; }}
                 />
                 <button 
                   className="send-button" 
