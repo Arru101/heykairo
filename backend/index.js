@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const helmet = require('helmet');
 const {
   updateUserSocket,
   getUserBySocketId,
@@ -13,6 +14,7 @@ const {
 } = require('./database');
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
@@ -87,9 +89,10 @@ io.on('connection', (socket) => {
 
     const { senderId, receiverId, encryptedPayload, clientMsgId } = data || {};
     
-    // 2. Strict Payload Validation
+    // 2. Strict Payload Validation & Anti-XSS
     if (!senderId || !receiverId || typeof encryptedPayload !== 'string' || encryptedPayload.length > 5000000) {
       console.warn(`[SECURITY] Malformed payload rejected from ${socket.id}`);
+      socket.disconnect(true); // Drop malicious connection instantly
       return;
     }
 

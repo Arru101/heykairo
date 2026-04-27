@@ -93,3 +93,29 @@ export const revokeBlobUrl = (url) => {
     URL.revokeObjectURL(url);
   }
 };
+
+/**
+ * Extreme Input Sanitization to destroy invisible control characters 
+ * used in buffer overflow or unicode attacks.
+ */
+export const sanitizeText = (input) => {
+  if (!input || typeof input !== 'string') return '';
+  // Strip control characters except newline and tab
+  return input.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '');
+};
+
+/**
+ * Strict URL validator to prevent XSS via media links (e.g., javascript:)
+ */
+export const validateMediaUrl = (url) => {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (['http:', 'https:', 'blob:'].includes(parsed.protocol)) {
+      return url;
+    }
+    return null;
+  } catch {
+    return null; // Invalid URL
+  }
+};

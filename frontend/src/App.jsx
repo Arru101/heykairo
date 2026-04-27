@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { socket } from './utils/socket';
 import { deriveKey, encryptMessage, decryptMessage, encryptFile, decryptFile } from './utils/crypto';
 import { uploadEncryptedToCloudinary, fetchEncryptedBlob } from './utils/cloudinary';
-import { initSecurity, createEphemeralBlobUrl, revokeBlobUrl } from './utils/security';
+import { initSecurity, createEphemeralBlobUrl, revokeBlobUrl, sanitizeText, validateMediaUrl } from './utils/security';
 
 const generateId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -131,6 +131,7 @@ function App() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [copied, setCopied] = useState(false);
 
@@ -271,7 +272,17 @@ function App() {
     // When opening a chat, instantly mark messages as seen
     socket.emit('mark_seen', { senderId: myId, receiverId: activeChat });
 
-    return () => socket.off('user_status_changed', handleStatus);
+    const handleWindowFocus = () => {
+      if (activeChatRef.current) {
+        socket.emit('mark_seen', { senderId: myId, receiverId: activeChatRef.current });
+      }
+    };
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      socket.off('user_status_changed', handleStatus);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, [activeChat, myId]);
 
   useEffect(() => {
@@ -302,15 +313,25 @@ function App() {
     const chat = activeChatRef.current;
     if ((!text.trim() && !mediaUrl) || !key || !chat) return;
 
-    const payload = JSON.stringify({ text: text.trim(), mediaUrl });
+    let finalMsg = sanitizeText(text.trim());
+    if (finalMsg.length > 0) {
+      finalMsg = finalMsg.charAt(0).toUpperCase() + finalMsg.slice(1);
+    }
+    const safeUrl = validateMediaUrl(mediaUrl);
+
+    const payloadObj = { text: finalMsg, mediaUrl: safeUrl };
+    if (replyingTo) payloadObj.replyTo = replyingTo;
+    
+    const payload = JSON.stringify(payloadObj);
     const encrypted = await encryptMessage(payload, key);
     const clientMsgId = Math.random().toString(36).substring(2, 15);
-    const newMsg = { id: clientMsgId, sender_id: myId, text: payload, _parsed: { text: text.trim(), mediaUrl }, me: true, timestamp: new Date().toISOString(), status: 'sent' };
+    const newMsg = { id: clientMsgId, sender_id: myId, text: payload, _parsed: payloadObj, me: true, timestamp: new Date().toISOString(), status: 'sent' };
     
     setMessages(p => [...p, newMsg]);
     socket.emit('send_message', { senderId: myId, receiverId: chat, encryptedPayload: encrypted, clientMsgId });
     setInputText('');
     setShowEmoji(false);
+    setReplyingTo(null);
     
     // Stop typing instantly
     socket.emit('stop_typing', { senderId: myId, receiverId: chat });
@@ -443,19 +464,33 @@ function App() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className={`flex w-full ${msg.me ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] md:max-w-[70%] p-2 px-3 md:p-2.5 md:px-3.5 rounded-[16px] relative overflow-hidden group shadow-md ${msg.me ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-[4px] shadow-blue-900/20' : 'bg-zinc-800 text-zinc-100 rounded-bl-[4px] border border-zinc-700/50'}`} onContextMenu={(e) => e.preventDefault()}>
-                    <div className="transition-all duration-200">
-                      {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
-                      {c.text && <p className="text-[14px] leading-snug whitespace-pre-wrap break-words font-sans font-medium tracking-tight">{c.text}</p>}
-                    </div>
-                    <div className={`flex items-center justify-end gap-1 mt-1 opacity-80`}>
-                      <span className={`text-[9px] font-bold tracking-wide ${msg.me ? 'text-blue-100' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      {msg.me && (
-                        msg.status === 'seen' 
-                          ? <CheckCheck size={12} className="text-blue-200" /> 
-                          : <Check size={12} className="text-blue-200/60" />
-                      )}
-                    </div>
+                  <div className={`max-w-[85%] md:max-w-[70%] relative group`}>
+                    <motion.div 
+                      drag="x" 
+                      dragConstraints={{ left: 0, right: 0 }} 
+                      dragElastic={0.1} 
+                      onDragEnd={(e, info) => { if (info.offset.x > 50) setReplyingTo({ id: msgId, text: c.text || 'Image' }); }}
+                      className={`p-2 px-3 md:p-2.5 md:px-3.5 rounded-[16px] relative overflow-hidden shadow-md ${msg.me ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-[4px] shadow-blue-900/20' : 'bg-zinc-800 text-zinc-100 rounded-bl-[4px] border border-zinc-700/50'}`} onContextMenu={(e) => e.preventDefault()}
+                    >
+                      <div className="transition-all duration-200">
+                        {c.replyTo && (
+                          <div className="mb-2 p-2 bg-black/20 rounded-lg border-l-2 border-indigo-400/50">
+                            <span className="text-[10px] text-indigo-200 block mb-0.5 opacity-80">Replied to:</span>
+                            <span className="text-xs italic opacity-90 truncate block max-w-full">{c.replyTo.text}</span>
+                          </div>
+                        )}
+                        {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
+                        {c.text && <p className="text-[14px] leading-snug whitespace-pre-wrap break-words font-sans font-medium tracking-tight">{c.text}</p>}
+                      </div>
+                      <div className={`flex items-center justify-end gap-1 mt-1 opacity-80`}>
+                        <span className={`text-[9px] font-bold tracking-wide ${msg.me ? 'text-blue-100' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {msg.me && (
+                          msg.status === 'seen' 
+                            ? <CheckCheck size={12} className="text-blue-200" /> 
+                            : <Check size={12} className="text-blue-200/60" />
+                        )}
+                      </div>
+                    </motion.div>
                   </div>
                 </motion.div>
               );
@@ -476,7 +511,16 @@ function App() {
           )}
         </AnimatePresence>
 
-        <footer className="p-3 md:p-4 bg-zinc-900/80 backdrop-blur-2xl border-t border-zinc-800/50 z-50 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <footer className="p-3 md:p-4 bg-zinc-900/80 backdrop-blur-2xl border-t border-zinc-800/50 z-50 pb-[max(12px,env(safe-area-inset-bottom))] flex flex-col gap-2">
+          {replyingTo && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-2.5 bg-zinc-800/80 rounded-xl border border-zinc-700/50 shadow-inner">
+              <div className="flex flex-col overflow-hidden max-w-[80%]">
+                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-0.5">Replying to</span>
+                <span className="text-sm text-zinc-300 truncate italic">{replyingTo.text}</span>
+              </div>
+              <button onClick={() => setReplyingTo(null)} className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700 rounded-lg transition-colors"><X size={16} /></button>
+            </motion.div>
+          )}
           <div className="flex items-end gap-2 md:gap-3">
             <motion.button 
               whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}
