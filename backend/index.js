@@ -51,8 +51,6 @@ setInterval(() => processedMessages.clear(), 1000 * 60 * 60); // Clear every hou
 
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-
   // Register user identity and deliver any pending offline messages
   socket.on('identify', async (uniqueId) => {
     try {
@@ -144,7 +142,6 @@ io.on('connection', (socket) => {
   socket.on('end_chat', async ({ senderId, receiverId }) => {
     try {
       await deleteConversation(senderId, receiverId);
-      console.log(`Conversation purged: ${senderId} <-> ${receiverId}`);
 
       // Notify the other party that the chat has been ended so they can also clear their UI
       const receiver = await getUserByUniqueId(receiverId);
@@ -158,7 +155,6 @@ io.on('connection', (socket) => {
 
   // Handle disconnect — mark user offline
   socket.on('disconnect', async () => {
-    console.log('User disconnected:', socket.id);
     if (socket.uniqueId) {
         io.emit('user_status_changed', { userId: socket.uniqueId, isOnline: false });
     }

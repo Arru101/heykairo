@@ -450,7 +450,7 @@ function App() {
               exit={{ height: 0, opacity: 0 }}
               className="border-t border-zinc-800/50 bg-zinc-900 overflow-hidden"
             >
-              <EmojiPicker theme="dark" lazyLoadEmojis={false} previewConfig={{ showPreview: false }} onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={300} width="100%" />
+              <EmojiPicker theme="dark" lazyLoadEmojis={false} autoFocusSearch={false} searchDisabled={true} previewConfig={{ showPreview: false }} onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={300} width="100%" />
             </motion.div>
           )}
         </AnimatePresence>
