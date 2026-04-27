@@ -116,6 +116,12 @@ io.on('connection', (socket) => {
           timestamp: savedMsg.timestamp
         });
         await markMessagesDelivered(receiverId);
+        
+        // Emit 3-Tier 'Delivered' receipt back to sender immediately
+        const sender = await getUserBySocketId(socket.id);
+        if (sender) {
+          io.to(sender.socket_id).emit('message_delivered', { messageId: clientMsgId, receiverId });
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);

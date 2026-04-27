@@ -225,6 +225,11 @@ function App() {
         socket.emit('mark_seen', { senderId: myId, receiverId: activeChatRef.current });
       }
     });
+    socket.on('message_delivered', ({ messageId, receiverId }) => {
+      if (receiverId === activeChatRef.current) {
+        setMessages(p => p.map(m => m.id === messageId ? { ...m, status: 'delivered' } : m));
+      }
+    });
     socket.on('messages_seen', ({ viewerId }) => {
       if (viewerId === activeChatRef.current) {
         setMessages(p => p.map(m => m.me ? { ...m, status: 'seen' } : m));
@@ -474,9 +479,9 @@ function App() {
                     >
                       <div className="transition-all duration-200">
                         {c.replyTo && (
-                          <div className="mb-2 p-2 bg-black/20 rounded-lg border-l-2 border-indigo-400/50">
-                            <span className="text-[10px] text-indigo-200 block mb-0.5 opacity-80">Replied to:</span>
-                            <span className="text-xs italic opacity-90 truncate block max-w-full">{c.replyTo.text}</span>
+                          <div className="mb-2 p-1.5 px-2.5 bg-black/20 rounded-r-lg rounded-l-[2px] border-l-[3px] border-blue-400 backdrop-blur-sm">
+                            <span className="text-[10px] text-blue-200 block font-bold tracking-wide opacity-90 uppercase">Replying to</span>
+                            <span className="text-[12px] opacity-90 truncate block max-w-full text-zinc-100">{c.replyTo.text}</span>
                           </div>
                         )}
                         {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
@@ -485,9 +490,9 @@ function App() {
                       <div className={`flex items-center justify-end gap-1 mt-1 opacity-80`}>
                         <span className={`text-[9px] font-bold tracking-wide ${msg.me ? 'text-blue-100' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {msg.me && (
-                          msg.status === 'seen' 
-                            ? <CheckCheck size={12} className="text-blue-200" /> 
-                            : <Check size={12} className="text-blue-200/60" />
+                          msg.status === 'seen' ? <CheckCheck size={14} className="text-blue-200" /> :
+                          msg.status === 'delivered' ? <CheckCheck size={14} className="text-blue-200/50" /> :
+                          <Check size={14} className="text-blue-200/50" />
                         )}
                       </div>
                     </motion.div>
