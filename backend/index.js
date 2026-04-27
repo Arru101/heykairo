@@ -138,6 +138,16 @@ io.on('connection', (socket) => {
     } catch { /* silent */ }
   });
 
+  // Read Receipts (Seen Status)
+  socket.on('mark_seen', async ({ senderId, receiverId }) => {
+    try {
+      const receiver = await getUserByUniqueId(receiverId);
+      if (receiver && receiver.is_online) {
+        io.to(receiver.socket_id).emit('messages_seen', { viewerId: senderId });
+      }
+    } catch { /* silent */ }
+  });
+
   // ── CHAT ENDED: purge all messages from the database ──────────────────────
   socket.on('end_chat', async ({ senderId, receiverId }) => {
     try {

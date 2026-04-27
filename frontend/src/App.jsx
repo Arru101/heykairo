@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Send, Image as ImageIcon, Smile, ArrowLeft, Lock,
-  Loader2, KeyRound, User, ShieldCheck, Copy, Check, X, ZoomIn, Info, LogOut
+  Loader2, KeyRound, User, ShieldCheck, Copy, Check, CheckCheck, X, ZoomIn, Info, LogOut
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -218,6 +218,16 @@ function App() {
       const dec = await decryptMessage(data.encrypted_payload, key);
       let parsed; try { parsed = JSON.parse(dec); } catch { parsed = { text: dec, mediaUrl: null }; }
       setMessages(p => [...p, { ...data, text: dec, _parsed: parsed, me: false, timestamp: data.timestamp || new Date().toISOString() }]);
+      
+      // If we are currently looking at the chat, instantly send read receipt
+      if (document.hasFocus()) {
+        socket.emit('mark_seen', { senderId: myId, receiverId: activeChatRef.current });
+      }
+    });
+    socket.on('messages_seen', ({ viewerId }) => {
+      if (viewerId === activeChatRef.current) {
+        setMessages(p => p.map(m => m.me ? { ...m, status: 'seen' } : m));
+      }
     });
     socket.on('typing', ({ senderId }) => { 
       if (senderId === activeChatRef.current) setIsTyping(true); 
@@ -257,8 +267,12 @@ function App() {
       if (userId === activeChat) setIsOnline(isOnline);
     };
     socket.on('user_status_changed', handleStatus);
+    
+    // When opening a chat, instantly mark messages as seen
+    socket.emit('mark_seen', { senderId: myId, receiverId: activeChat });
+
     return () => socket.off('user_status_changed', handleStatus);
-  }, [activeChat]);
+  }, [activeChat, myId]);
 
   useEffect(() => {
     if (messagesAreaRef.current) messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
@@ -291,7 +305,7 @@ function App() {
     const payload = JSON.stringify({ text: text.trim(), mediaUrl });
     const encrypted = await encryptMessage(payload, key);
     const clientMsgId = Math.random().toString(36).substring(2, 15);
-    const newMsg = { id: clientMsgId, sender_id: myId, text: payload, _parsed: { text: text.trim(), mediaUrl }, me: true, timestamp: new Date().toISOString() };
+    const newMsg = { id: clientMsgId, sender_id: myId, text: payload, _parsed: { text: text.trim(), mediaUrl }, me: true, timestamp: new Date().toISOString(), status: 'sent' };
     
     setMessages(p => [...p, newMsg]);
     socket.emit('send_message', { senderId: myId, receiverId: chat, encryptedPayload: encrypted, clientMsgId });
@@ -429,12 +443,19 @@ function App() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className={`flex w-full ${msg.me ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] md:max-w-[70%] p-2 px-3 md:p-2.5 md:px-3.5 rounded-[16px] relative overflow-hidden group shadow-md ${msg.me ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-[4px] shadow-indigo-600/20' : 'bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700/50 rounded-bl-[4px] text-zinc-100'}`} onContextMenu={(e) => e.preventDefault()}>
+                  <div className={`max-w-[85%] md:max-w-[70%] p-2 px-3 md:p-2.5 md:px-3.5 rounded-[16px] relative overflow-hidden group shadow-md ${msg.me ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-[4px] shadow-blue-900/20' : 'bg-zinc-800 text-zinc-100 rounded-bl-[4px] border border-zinc-700/50'}`} onContextMenu={(e) => e.preventDefault()}>
                     <div className="transition-all duration-200">
                       {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
                       {c.text && <p className="text-[14px] leading-snug whitespace-pre-wrap break-words font-sans font-medium tracking-tight">{c.text}</p>}
                     </div>
-                    <span className={`text-[9px] mt-1 block text-right font-bold tracking-wide opacity-80 ${msg.me ? 'text-indigo-100' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className={`flex items-center justify-end gap-1 mt-1 opacity-80`}>
+                      <span className={`text-[9px] font-bold tracking-wide ${msg.me ? 'text-blue-100' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      {msg.me && (
+                        msg.status === 'seen' 
+                          ? <CheckCheck size={12} className="text-blue-200" /> 
+                          : <Check size={12} className="text-blue-200/60" />
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -479,11 +500,11 @@ function App() {
             >
               <Smile size={24} strokeWidth={2.5} />
             </motion.button>
-              <label className="p-2.5 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-full flex items-center justify-center transition-colors cursor-pointer" onMouseDown={e => e.preventDefault()}>
+              <label className="p-2.5 text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-full flex items-center justify-center transition-colors cursor-pointer" onMouseDown={e => e.preventDefault()}>
                 {uploading ? <Loader2 size={24} className="animate-spin" /> : <ImageIcon size={24} strokeWidth={2.5} />}
                 <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
               </label>
-              <div className="flex-1 bg-black/30 border border-zinc-700/50 rounded-[28px] flex items-end focus-within:border-indigo-500/50 focus-within:bg-zinc-800/50 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all shadow-inner">
+              <div className="flex-1 bg-black/30 border border-zinc-700/50 rounded-[20px] flex items-end focus-within:border-blue-500/50 focus-within:bg-zinc-800/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner">
                 <textarea
                   ref={textareaRef}
                   placeholder="Message..."
@@ -503,17 +524,17 @@ function App() {
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
                   onClick={() => { if (showEmoji) setShowEmoji(false); }}
                   rows={1}
-                  className="flex-1 bg-transparent border-none outline-none py-3.5 px-5 text-zinc-100 text-[15px] font-medium resize-none max-h-[120px] placeholder-zinc-500"
+                  className="flex-1 bg-transparent border-none outline-none py-2.5 px-4 text-zinc-100 text-[15px] font-medium resize-none max-h-[120px] placeholder-zinc-500"
                   onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }}
                 />
                 <motion.button 
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 md:w-11 md:h-11 m-1.5 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-600/30 disabled:opacity-30 disabled:shadow-none transition-opacity" 
+                  className="w-9 h-9 md:w-10 md:h-10 m-1 bg-blue-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-blue-600/30 disabled:opacity-30 disabled:shadow-none transition-opacity" 
                   onMouseDown={e => e.preventDefault()}
                   onClick={() => sendMessage(inputText)} 
                   disabled={!inputText.trim()}
                 >
-                  <Send size={18} strokeWidth={2.5} className="-ml-0.5" />
+                  <Send size={16} strokeWidth={2.5} className="-ml-0.5" />
                 </motion.button>
             </div>
           </div>
