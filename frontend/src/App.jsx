@@ -353,7 +353,7 @@ function App() {
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     
     if (!showEmoji) textareaRef.current?.focus();
-  }, [myId, showEmoji]);
+  }, [myId, showEmoji, replyingTo, cryptoKey]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -466,7 +466,7 @@ function App() {
           </div>
         </header>
 
-        <div ref={messagesAreaRef} className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 md:gap-6">
+        <div ref={messagesAreaRef} className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 md:gap-6 will-change-scroll transform-gpu">
           <AnimatePresence>
             {messages.map((msg, i) => {
               const c = msg._parsed || { text: msg.text, mediaUrl: null };
@@ -474,10 +474,10 @@ function App() {
               return (
                 <motion.div 
                   key={msgId} 
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 15, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className={`flex w-full ${msg.me ? 'justify-end' : 'justify-start'}`}
+                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                  className={`flex w-full ${msg.me ? 'justify-end' : 'justify-start'} will-change-transform`}
                 >
                   <div className={`max-w-[85%] md:max-w-[70%] relative group`}>
                     <motion.div 
