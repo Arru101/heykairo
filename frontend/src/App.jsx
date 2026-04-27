@@ -227,7 +227,7 @@ function App() {
     });
     socket.on('message_delivered', ({ messageId, receiverId }) => {
       if (receiverId === activeChatRef.current) {
-        setMessages(p => p.map(m => m.id === messageId ? { ...m, status: 'delivered' } : m));
+        setMessages(p => p.map(m => (m.id === messageId && m.status !== 'seen') ? { ...m, status: 'delivered' } : m));
       }
     });
     socket.on('messages_seen', ({ viewerId }) => {
@@ -267,10 +267,20 @@ function App() {
 
   useEffect(() => {
     if (!activeChat) return;
-    socket.emit('check_status', activeChat, res => setIsOnline(res?.isOnline ?? false));
+    socket.emit('check_status', activeChat, res => {
+      setIsOnline(res?.isOnline ?? false);
+      if (res?.isOnline) {
+        setMessages(p => p.map(m => m.me && m.status === 'sent' ? { ...m, status: 'delivered' } : m));
+      }
+    });
     
     const handleStatus = ({ userId, isOnline }) => {
-      if (userId === activeChat) setIsOnline(isOnline);
+      if (userId === activeChat) {
+        setIsOnline(isOnline);
+        if (isOnline) {
+          setMessages(p => p.map(m => m.me && m.status === 'sent' ? { ...m, status: 'delivered' } : m));
+        }
+      }
     };
     socket.on('user_status_changed', handleStatus);
     
@@ -479,8 +489,8 @@ function App() {
                     >
                       <div className="transition-all duration-200">
                         {c.replyTo && (
-                          <div className="mb-2 p-1.5 px-2.5 bg-black/20 rounded-r-lg rounded-l-[2px] border-l-[3px] border-blue-400 backdrop-blur-sm">
-                            <span className="text-[10px] text-blue-200 block font-bold tracking-wide opacity-90 uppercase">Replying to</span>
+                          <div className={`mb-2 p-1.5 px-2.5 rounded-r-lg rounded-l-[2px] border-l-[3px] backdrop-blur-sm ${msg.me ? 'bg-white/10 border-white/50' : 'bg-black/20 border-blue-500'}`}>
+                            <span className={`text-[10px] block font-bold tracking-wide opacity-90 uppercase ${msg.me ? 'text-blue-100' : 'text-blue-400'}`}>Replying to</span>
                             <span className="text-[12px] opacity-90 truncate block max-w-full text-zinc-100">{c.replyTo.text}</span>
                           </div>
                         )}
