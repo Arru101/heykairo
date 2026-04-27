@@ -25,6 +25,31 @@ const io = new Server(server, {
   }
 });
 
+// ─── Backend Algorithms: Security & Performance ──────────────
+const userRateLimits = new Map();
+const processedMessages = new Set(); // Simple deduplication cache
+
+// 1. Rate Limiter Algorithm (Token Bucket variation)
+const isRateLimited = (socketId) => {
+  const now = Date.now();
+  const limitData = userRateLimits.get(socketId) || { count: 0, windowStart: now };
+  
+  if (now - limitData.windowStart > 1000) {
+    // Reset window every second
+    limitData.count = 1;
+    limitData.windowStart = now;
+  } else {
+    limitData.count++;
+  }
+  
+  userRateLimits.set(socketId, limitData);
+  return limitData.count > 5; // Max 5 requests per second per socket
+};
+
+// Periodic cleanup of deduplication cache to prevent memory leaks
+setInterval(() => processedMessages.clear(), 1000 * 60 * 60); // Clear every hour
+
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -57,7 +82,27 @@ io.on('connection', (socket) => {
 
   // Send an encrypted message
   socket.on('send_message', async (data) => {
-    const { senderId, receiverId, encryptedPayload } = data;
+    if (isRateLimited(socket.id)) {
+      console.warn(`[SECURITY] Rate limit exceeded by ${socket.id}`);
+      return;
+    }
+
+    const { senderId, receiverId, encryptedPayload, clientMsgId } = data || {};
+    
+    // 2. Strict Payload Validation
+    if (!senderId || !receiverId || typeof encryptedPayload !== 'string' || encryptedPayload.length > 5000000) {
+      console.warn(`[SECURITY] Malformed payload rejected from ${socket.id}`);
+      return;
+    }
+
+    // 3. Message Deduplication Algorithm
+    const dedupKey = `${senderId}-${receiverId}-${clientMsgId || encryptedPayload.substring(0, 32)}`;
+    if (processedMessages.has(dedupKey)) {
+      console.warn(`[SECURITY] Duplicate message blocked from ${senderId}`);
+      return;
+    }
+    processedMessages.add(dedupKey);
+
     try {
       const savedMsg = await saveMessage(senderId, receiverId, encryptedPayload);
       const receiver = await getUserByUniqueId(receiverId);
