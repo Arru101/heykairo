@@ -429,12 +429,12 @@ function App() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className={`flex w-full ${msg.me ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] md:max-w-[70%] p-2.5 px-3.5 md:p-3 md:px-4 rounded-[18px] relative overflow-hidden group ${msg.me ? 'bg-indigo-600 text-white rounded-br-[8px] shadow-lg shadow-indigo-600/20' : 'bg-zinc-800/80 border border-zinc-700/50 rounded-bl-[8px] backdrop-blur-md text-zinc-100'}`} onContextMenu={(e) => e.preventDefault()}>
+                  <div className={`max-w-[85%] md:max-w-[70%] p-2 px-3 md:p-2.5 md:px-3.5 rounded-[16px] relative overflow-hidden group shadow-md ${msg.me ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-[4px] shadow-indigo-600/20' : 'bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700/50 rounded-bl-[4px] text-zinc-100'}`} onContextMenu={(e) => e.preventDefault()}>
                     <div className="transition-all duration-200">
                       {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
-                      {c.text && <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words font-mono font-medium tracking-tight">{c.text}</p>}
+                      {c.text && <p className="text-[14px] leading-snug whitespace-pre-wrap break-words font-sans font-medium tracking-tight">{c.text}</p>}
                     </div>
-                    <span className={`text-[10px] mt-2 block text-right font-bold tracking-wide ${msg.me ? 'text-indigo-200' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className={`text-[9px] mt-1 block text-right font-bold tracking-wide opacity-80 ${msg.me ? 'text-indigo-100' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </motion.div>
               );
