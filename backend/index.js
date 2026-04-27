@@ -159,6 +159,9 @@ io.on('connection', (socket) => {
   // Handle disconnect — mark user offline
   socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
+    if (socket.uniqueId) {
+        io.emit('user_status_changed', { userId: socket.uniqueId, isOnline: false });
+    }
     try {
       const user = await getUserBySocketId(socket.id);
       if (user) {

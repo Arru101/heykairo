@@ -148,21 +148,17 @@ function App() {
     setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
   }, []);
 
-  /* Mobile Keyboard Stability Fix */
+  /* Mobile Scroll to Bottom Fix */
   useEffect(() => {
-    const handleViewportChange = () => {
-      if (window.visualViewport) {
-        document.documentElement.style.setProperty('--vh', `${window.visualViewport.height}px`);
-        requestAnimationFrame(() => {
-          if (messagesAreaRef.current) messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
-        });
+    const scrollToBottom = () => {
+      if (messagesAreaRef.current) {
+        messagesAreaRef.current.scrollTop = messagesAreaRef.current.scrollHeight;
       }
     };
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-      handleViewportChange();
+      window.visualViewport.addEventListener('resize', scrollToBottom);
     }
-    return () => window.visualViewport?.removeEventListener('resize', handleViewportChange);
+    return () => window.visualViewport?.removeEventListener('resize', scrollToBottom);
   }, [activeChat]);
 
   /* Extreme Security Measures */
@@ -231,9 +227,13 @@ function App() {
 
   useEffect(() => {
     if (!activeChat) return;
-    const poll = () => socket.emit('check_status', activeChat, res => setIsOnline(res?.isOnline ?? false));
-    poll(); const iv = setInterval(poll, 5000);
-    return () => clearInterval(iv);
+    socket.emit('check_status', activeChat, res => setIsOnline(res?.isOnline ?? false));
+    
+    const handleStatus = ({ userId, isOnline }) => {
+      if (userId === activeChat) setIsOnline(isOnline);
+    };
+    socket.on('user_status_changed', handleStatus);
+    return () => socket.off('user_status_changed', handleStatus);
   }, [activeChat]);
 
   useEffect(() => {
@@ -361,7 +361,7 @@ function App() {
   }
 
   return (
-    <div className="h-[var(--vh,100vh)] w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans transition-all duration-300">
+    <div className="h-[100dvh] w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans transition-all duration-300">
       <Toast {...toast} />
       <AnimatePresence>
         {showConfirm && <ConfirmModal onConfirm={endChat} onCancel={() => setShowConfirm(false)} />}
@@ -422,7 +422,7 @@ function App() {
               exit={{ height: 0, opacity: 0 }}
               className="border-t border-zinc-800/50 bg-zinc-900 overflow-hidden"
             >
-              <EmojiPicker theme="dark" previewConfig={{ showPreview: false }} onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={300} width="100%" />
+              <EmojiPicker theme="dark" lazyLoadEmojis={false} previewConfig={{ showPreview: false }} onEmojiClick={(e) => setInputText(p => p + e.emoji)} height={300} width="100%" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -433,8 +433,13 @@ function App() {
               whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}
               className={`p-2.5 rounded-full flex items-center justify-center transition-colors ${showEmoji ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10'}`} 
               onClick={() => {
-                if (!showEmoji) textareaRef.current?.blur();
-                setShowEmoji(!showEmoji);
+                if (!showEmoji) {
+                  // Forcefully drop keyboard focus before showing picker
+                  textareaRef.current?.blur();
+                  setTimeout(() => setShowEmoji(true), 50);
+                } else {
+                  setShowEmoji(false);
+                }
               }}
             >
               <Smile size={24} strokeWidth={2.5} />
