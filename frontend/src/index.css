@@ -15,10 +15,16 @@ html, body, #root {
 /* ─── Premium Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
 
-/* ─── Custom Font classes (if standard tailwind isn't enough) ───────── */
+/* ─── Premium Background Pattern ──────────────────────────────────────── */
+.bg-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* ─── Security Classes ────────────────────────────────────────────────── */
 .font-mono-spaced { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
 
 /* ─── Security Helpers ───────────────────────────────────────────────── */

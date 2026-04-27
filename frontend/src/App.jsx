@@ -395,7 +395,7 @@ function App() {
         {showConfirm && <ConfirmModal onConfirm={endChat} onCancel={() => setShowConfirm(false)} />}
       </AnimatePresence>
       
-      <div className="w-full max-w-[1200px] h-full flex flex-col bg-zinc-900/40 mx-auto lg:border-x border-zinc-800/50 relative overflow-hidden">
+      <div className="w-full max-w-[1200px] h-full flex flex-col bg-zinc-900/40 bg-pattern mx-auto lg:border-x border-zinc-800/50 relative overflow-hidden">
         <header className="py-3 px-4 md:px-6 bg-zinc-900/80 backdrop-blur-2xl border-b border-zinc-800/50 flex items-center justify-between z-50">
           <div className="flex items-center gap-3 md:gap-4">
             <button className="p-2 -ml-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-full transition-colors" onClick={() => setShowConfirm(true)}><ArrowLeft size={20} /></button>
@@ -429,10 +429,10 @@ function App() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className={`flex w-full ${msg.me ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] md:max-w-[70%] p-3.5 md:p-4 rounded-[22px] relative overflow-hidden group ${msg.me ? 'bg-indigo-600 text-white rounded-br-[8px] shadow-lg shadow-indigo-600/20' : 'bg-zinc-800/80 border border-zinc-700/50 rounded-bl-[8px] backdrop-blur-md text-zinc-100'}`} onContextMenu={(e) => e.preventDefault()}>
+                  <div className={`max-w-[85%] md:max-w-[70%] p-2.5 px-3.5 md:p-3 md:px-4 rounded-[18px] relative overflow-hidden group ${msg.me ? 'bg-indigo-600 text-white rounded-br-[8px] shadow-lg shadow-indigo-600/20' : 'bg-zinc-800/80 border border-zinc-700/50 rounded-bl-[8px] backdrop-blur-md text-zinc-100'}`} onContextMenu={(e) => e.preventDefault()}>
                     <div className="transition-all duration-200">
                       {c.mediaUrl && <EncryptedImage cloudinaryUrl={c.mediaUrl} cryptoKey={cryptoKey} />}
-                      {c.text && <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words font-medium tracking-tight">{c.text}</p>}
+                      {c.text && <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words font-mono font-medium tracking-tight">{c.text}</p>}
                     </div>
                     <span className={`text-[10px] mt-2 block text-right font-bold tracking-wide ${msg.me ? 'text-indigo-200' : 'text-zinc-500'}`}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
@@ -501,6 +501,7 @@ function App() {
                     }, 1500);
                   }}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
+                  onClick={() => { if (showEmoji) setShowEmoji(false); }}
                   rows={1}
                   className="flex-1 bg-transparent border-none outline-none py-3.5 px-5 text-zinc-100 text-[15px] font-medium resize-none max-h-[120px] placeholder-zinc-500"
                   onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }}

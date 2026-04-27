@@ -8,11 +8,19 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'framer-motion': ['framer-motion'],
-          'emoji-picker': ['emoji-picker-react'],
-          'lucide': ['lucide-react']
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/framer-motion/')) {
+            return 'framer-motion';
+          }
+          if (id.includes('node_modules/emoji-picker-react/')) {
+            return 'emoji-picker';
+          }
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'lucide';
+          }
         }
       }
     }

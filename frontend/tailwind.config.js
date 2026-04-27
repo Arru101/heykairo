@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif']
-      }
+        sans: ['Outfit', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
     },
   },
   plugins: [],
