@@ -361,7 +361,7 @@ function App() {
   }
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans transition-all duration-300">
+    <div className="h-full w-full flex flex-col bg-zinc-950 text-zinc-100 font-sans transition-all duration-300">
       <Toast {...toast} />
       <AnimatePresence>
         {showConfirm && <ConfirmModal onConfirm={endChat} onCancel={() => setShowConfirm(false)} />}
@@ -432,11 +432,18 @@ function App() {
             <motion.button 
               whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}
               className={`p-2.5 rounded-full flex items-center justify-center transition-colors ${showEmoji ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10'}`} 
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 if (!showEmoji) {
-                  // Forcefully drop keyboard focus before showing picker
+                  // Aggressive Keyboard Dismissal
+                  if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                  }
                   textareaRef.current?.blur();
-                  setTimeout(() => setShowEmoji(true), 50);
+                  window.focus(); // Force OS to drop keyboard
+                  
+                  // Wait 150ms for Android keyboard to physically animate away
+                  setTimeout(() => setShowEmoji(true), 150);
                 } else {
                   setShowEmoji(false);
                 }
