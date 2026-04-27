@@ -336,9 +336,9 @@ function App() {
 
   if (!activeChat) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-zinc-950 to-zinc-950">
+      <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 py-8 lg:p-8 bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-zinc-950 to-zinc-950">
         <Toast {...toast} />
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[440px] bg-zinc-900/60 backdrop-blur-2xl border border-zinc-800/60 rounded-[32px] p-8 lg:p-10 shadow-2xl">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[440px] bg-zinc-900/60 backdrop-blur-2xl border border-zinc-800/60 rounded-[32px] p-8 lg:p-10 shadow-2xl my-auto">
           <div className="flex flex-col items-center gap-4 mb-10">
             <KairoLogo size={72} />
             <div className="text-center">
@@ -347,7 +347,7 @@ function App() {
             </div>
           </div>
           <div className="mb-8">
-            <label className="text-[11px] font-bold text-zinc-500 tracking-[0.15em] mb-2.5 block uppercase">Your Target ID</label>
+            <label className="text-[11px] font-bold text-zinc-500 tracking-[0.15em] mb-2.5 block uppercase">Your Partner ID</label>
             <div className="bg-black/30 border border-zinc-800/60 rounded-2xl p-4 flex justify-between items-center group hover:border-indigo-500/30 transition-colors">
               <span className="font-mono font-bold text-2xl tracking-[0.1em] text-zinc-100">{myId}</span>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={copyId} className={`p-2 rounded-xl transition-colors ${copied ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10'}`}>
@@ -488,7 +488,8 @@ function App() {
                   ref={textareaRef}
                   placeholder="Message..."
                   value={inputText}
-                  readOnly={showEmoji} // VITAL: Android cannot open keyboard for readOnly inputs
+                  readOnly={showEmoji} // Fallback for older Androids
+                  inputMode={showEmoji ? 'none' : 'text'} // VITAL: Completely disables virtual keyboard at OS hardware level
                   onChange={e => { 
                     setInputText(e.target.value); 
                     
