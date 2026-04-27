@@ -136,7 +136,7 @@ function App() {
 
   const messagesAreaRef = useRef(null);
   const textareaRef = useRef(null);
-  const typingTimeout = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const cryptoKeyRef = useRef(null);
   const activeChatRef = useRef(null);
 
@@ -219,11 +219,35 @@ function App() {
       let parsed; try { parsed = JSON.parse(dec); } catch { parsed = { text: dec, mediaUrl: null }; }
       setMessages(p => [...p, { ...data, text: dec, _parsed: parsed, me: false, timestamp: data.timestamp || new Date().toISOString() }]);
     });
-    socket.on('typing', ({ senderId }) => { if (senderId === activeChatRef.current) setIsTyping(true); });
-    socket.on('stop_typing', ({ senderId }) => { if (senderId === activeChatRef.current) setIsTyping(false); });
-    socket.on('chat_ended', () => { setMessages([]); setActiveChat(null); setCryptoKey(null); });
+    socket.on('typing', ({ senderId }) => { 
+      if (senderId === activeChatRef.current) setIsTyping(true); 
+    });
+    socket.on('stop_typing', ({ senderId }) => { 
+      if (senderId === activeChatRef.current) setIsTyping(false); 
+    });
+    socket.on('chat_ended', () => { 
+      setMessages([]); setActiveChat(null); setCryptoKey(null); setIsTyping(false); 
+    });
     return () => socket.disconnect();
   }, []);
+
+  /* Hardware Back Button Intercept */
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (activeChatRef.current) {
+        // Prevent default back navigation
+        window.history.pushState(null, '', window.location.href);
+        setShowConfirm(true);
+      }
+    };
+
+    if (activeChat) {
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeChat]);
 
   useEffect(() => {
     if (!activeChat) return;
@@ -254,8 +278,9 @@ function App() {
   const endChat = useCallback(() => {
     const chat = activeChatRef.current;
     if (chat) socket.emit('end_chat', { senderId: myId, receiverId: chat });
-    setMessages([]); setActiveChat(null); setCryptoKey(null);
+    setMessages([]); setActiveChat(null); setCryptoKey(null); setIsTyping(false);
     setInputText(''); setShowEmoji(false); setShowConfirm(false); setPasswordInput('');
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
   }, [myId]);
 
   const sendMessage = useCallback(async (text, mediaUrl = null) => {
@@ -272,7 +297,10 @@ function App() {
     socket.emit('send_message', { senderId: myId, receiverId: chat, encryptedPayload: encrypted, clientMsgId });
     setInputText('');
     setShowEmoji(false);
+    
+    // Stop typing instantly
     socket.emit('stop_typing', { senderId: myId, receiverId: chat });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     
     if (!showEmoji) textareaRef.current?.focus();
   }, [myId, showEmoji]);
@@ -442,8 +470,8 @@ function App() {
                   textareaRef.current?.blur();
                   window.focus(); // Force OS to drop keyboard
                   
-                  // Wait 150ms for Android keyboard to physically animate away
-                  setTimeout(() => setShowEmoji(true), 150);
+                  // Wait 100ms for Android keyboard to physically animate away
+                  setTimeout(() => setShowEmoji(true), 100);
                 } else {
                   setShowEmoji(false);
                 }
@@ -460,7 +488,17 @@ function App() {
                   ref={textareaRef}
                   placeholder="Message..."
                   value={inputText}
-                  onChange={e => { setInputText(e.target.value); socket.emit('typing', { senderId: myId, receiverId: activeChat }); }}
+                  readOnly={showEmoji} // VITAL: Android cannot open keyboard for readOnly inputs
+                  onChange={e => { 
+                    setInputText(e.target.value); 
+                    
+                    // Precision Typing Debounce Algorithm
+                    socket.emit('typing', { senderId: myId, receiverId: activeChat }); 
+                    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                    typingTimeoutRef.current = setTimeout(() => {
+                      socket.emit('stop_typing', { senderId: myId, receiverId: activeChat });
+                    }, 1500);
+                  }}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); } }}
                   rows={1}
                   className="flex-1 bg-transparent border-none outline-none py-3.5 px-5 text-zinc-100 text-[15px] font-medium resize-none max-h-[120px] placeholder-zinc-500"
