@@ -1,6 +1,6 @@
 {
-  "name": "Kairo Secure Chat",
-  "short_name": "Kairo",
+  "name": "HeyApp! Secure Chat",
+  "short_name": "HeyApp!",
   "description": "Secure, anonymous, and encrypted real-time communications.",
   "start_url": "/",
   "display": "standalone",

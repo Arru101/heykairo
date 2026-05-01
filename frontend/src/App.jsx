@@ -13,35 +13,19 @@ import { initSecurity, createEphemeralBlobUrl, revokeBlobUrl, sanitizeText, vali
 
 const generateId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
-function KairoLogo({ size = 32 }) {
+function TextLogo({ size = 'large' }) {
+  const isLarge = size === 'large';
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="60" cy="96" rx="30" ry="22" fill="#4f46e5"/>
-      <circle cx="60" cy="52" r="36" fill="#FFD93D"/>
-      <circle cx="24" cy="50" r="7" fill="#F5C518"/>
-      <circle cx="96" cy="50" r="7" fill="#F5C518"/>
-      <rect x="24" y="38" width="72" height="22" rx="11" fill="#555566"/>
-      <circle cx="60" cy="49" r="14" fill="white"/>
-      <circle cx="60" cy="49" r="10" fill="#6366f1"/>
-      <circle cx="60" cy="49" r="5" fill="#111122"/>
-      <circle cx="64" cy="44" r="2.5" fill="white"/>
-      <circle cx="57" cy="52" r="1.2" fill="white" opacity="0.7"/>
-      <circle cx="60" cy="49" r="14" fill="none" stroke="#333344" strokeWidth="2"/>
-      <circle cx="28" cy="49" r="3" fill="#444455"/>
-      <circle cx="92" cy="49" r="3" fill="#444455"/>
-      <ellipse cx="30" cy="68" rx="9" ry="6" fill="#FFB347" opacity="0.45"/>
-      <ellipse cx="90" cy="68" rx="9" ry="6" fill="#FFB347" opacity="0.45"/>
-      <path d="M42 72 Q60 86 78 72" stroke="#5C3A1E" strokeWidth="3" fill="#FF8C69" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="51" y="73" width="8" height="7" rx="2" fill="white"/>
-      <rect x="61" y="73" width="8" height="7" rx="2" fill="white"/>
-      <line x1="60" y1="73" x2="60" y2="80" stroke="#ddd" strokeWidth="1"/>
-      <rect x="44" y="84" width="32" height="26" rx="4" fill="#4f46e5"/>
-      <text x="60" y="103" textAnchor="middle" fill="white" fontSize="14" fontWeight="800" fontFamily="monospace">K</text>
-      <rect x="48" y="76" width="8" height="14" rx="4" fill="#4f46e5"/>
-      <rect x="64" y="76" width="8" height="14" rx="4" fill="#4f46e5"/>
-      <circle cx="52" cy="80" r="2" fill="#818cf8"/>
-      <circle cx="68" cy="80" r="2" fill="#818cf8"/>
-    </svg>
+    <motion.div 
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.05 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={`font-black tracking-tighter cursor-default select-none flex items-baseline ${isLarge ? 'text-[80px] leading-none mb-2' : 'text-[28px] leading-none'}`}
+    >
+      <span className="text-transparent bg-clip-text bg-gradient-to-b from-zinc-100 to-zinc-400">H</span>
+      <span className="text-indigo-500 text-transparent bg-clip-text bg-gradient-to-b from-indigo-400 to-indigo-600 pr-2 pb-1">.</span>
+    </motion.div>
   );
 }
 
@@ -389,11 +373,11 @@ function App() {
       <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 py-8 lg:p-8 bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-zinc-950 to-zinc-950">
         <Toast {...toast} />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[440px] bg-zinc-900/60 backdrop-blur-2xl border border-zinc-800/60 rounded-[32px] p-8 lg:p-10 shadow-2xl my-auto">
-          <div className="flex flex-col items-center gap-4 mb-10">
-            <KairoLogo size={72} />
-            <div className="text-center">
-              <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-indigo-600 mb-1">Kairo</h1>
-              <p className="text-zinc-400 font-medium text-sm lg:text-base">Secure & Anonymous Chat</p>
+          <div className="flex flex-col items-center gap-2 mb-10">
+            <TextLogo size="large" />
+            <div className="text-center mt-2">
+              <h1 className="text-xl lg:text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-indigo-300 to-slate-300 opacity-90 mb-1">HeyApp!</h1>
+              <p className="text-zinc-500 font-semibold text-xs tracking-[0.2em] uppercase">Secure & Anonymous Chat</p>
             </div>
           </div>
           <div className="mb-8">
@@ -462,7 +446,7 @@ function App() {
             <div className="bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-indigo-400 text-[10px] font-extrabold tracking-widest uppercase hidden md:flex">
               <ShieldCheck size={12} /><span>SECURE</span>
             </div>
-            <KairoLogo size={28} />
+            <TextLogo size="small" />
           </div>
         </header>
 
